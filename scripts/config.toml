@@ -1,0 +1,41 @@
+# download‑manager configuration
+# If a value is missing, the default shown here will be used.
+
+split_mb = 99                         # file‑size threshold for splitting (MiB)
+push_batch_bytes = 367001600           # maximum bytes per git push (350 MiB)
+max_parallel = 4                       # simultaneous asset downloads
+compression_level = 5                  # Deflate64 effort (1‑fastest, 9‑best)
+compression_method = "Deflate64"       # 7z method (Deflate64, LZMA2, etc.)
+
+extract_archive_exts = [               # archive formats that are extracted before repacking
+    ".zip",
+    ".jar",
+    ".war",
+    ".ear",
+]
+
+skip_asset_exts = [                    # file extensions that are ALWAYS ignored
+    ".sha256",
+    ".sha256sum",
+    ".sha512",
+    ".sha512sum",
+    ".sha1",
+    ".sha1sum",
+    ".md5",
+    ".md5sum",
+    ".asc",
+    ".sig",
+    ".sign",
+    ".pgp",
+    ".blake2b",
+    ".blake2s",
+    ".sha3",
+    ".sha256.txt",
+    ".sha512.txt",
+    ".sha1.txt",
+    ".md5.txt",
+    ".sha256sums",
+    ".sha512sums",
+    ".sha1sums",
+    ".md5sums",
+]
