@@ -22,10 +22,10 @@
     }
   ],
   "crc32": {
-    "zyrln-relay.7z": "fb6bd410",
-    "zyrln-windows-amd64.7z": "5c7dffad",
-    "zyrln-1.4.0.7z": "0694fd62",
-    "zyrln-linux-amd64.7z": "53475cbe"
+    "zyrln-relay.7z": "5e979094",
+    "zyrln-windows-amd64.7z": "d9652140",
+    "zyrln-1.4.0.7z": "49ccb991",
+    "zyrln-linux-amd64.7z": "0e18eedd"
   },
   "total_size": 38728683,
   "release_date": "2026-05-06T03:55:36Z"
