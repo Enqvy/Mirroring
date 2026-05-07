@@ -192,16 +192,15 @@ def write_metadata(folder, url, method, **extra):
     log(f"📝 metadata → {path}")
 
 def write_readme(folder, title, url, method, extra=None):
+    """Write per‑folder README with enhanced extra info."""
     lines = [
         f"# {title}", "",
         "| Property | Value |",
         "|--- |---|",
         f"| **URL** | {url} |",
-        f"| **Downloaded** | {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} |",
-        f"| **Source** | {method} |"
     ]
     if extra:
-        for k,v in extra.items():
+        for k, v in extra.items():
             lines.append(f"| **{k}** | {v} |")
     lines += ["", "<details><summary>Files</summary>", ""]
     for f in sorted(Path(folder).iterdir()):
@@ -578,12 +577,44 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
 
     final_files = [f for f in folder.iterdir() if f.is_file() and f.name not in ("README.md", "metadata.json")]
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
+
+    # ---- Enriched metadata ----
+    total_size = sum(os.path.getsize(str(f)) for f in final_files)
+    main_hash = crc_info[final_files[0].name] if final_files else ""
+
+    rel_date = release.get("published_at") or release.get("created_at")
+    if rel_date:
+        try:
+            dt = datetime.fromisoformat(rel_date.replace('Z', '+00:00'))
+            ago = datetime.now(timezone.utc) - dt
+            if ago.days > 0:
+                ago_str = f"{ago.days} day{'s' if ago.days>1 else ''} ago"
+            else:
+                secs = ago.seconds
+                ago_str = f"{secs//3600} hr ago" if secs >= 3600 else f"{secs//60} min ago"
+            release_date_str = f"{dt.strftime('%Y-%m-%d %H:%M UTC')} ({ago_str})"
+        except Exception:
+            release_date_str = rel_date
+    else:
+        release_date_str = "N/A"
+
+    extra = {
+        "Release Date": release_date_str,
+        "Total Size": human_size(total_size),
+        "Hash (CRC32)": main_hash,
+    }
+    if release_name:
+        extra["Release Name"] = release_name
+    extra["Tag"] = tag
+
     write_metadata(str(folder), url, "github_release", repo=repo, tag=tag,
                    assets=[{"name": n, "size": sz} for n, u, sz in wanted_assets],
-                   crc32=crc_info)
-    title = final_files[0].stem if len(final_files) == 1 else release_name
-    write_readme(str(folder), title, url, "GitHub Release",
-                 {"Release": release_name, "Tag": tag})
+                   crc32=crc_info,
+                   total_size=total_size,
+                   release_date=rel_date)
+    title = repo
+    write_readme(str(folder), title, f"https://github.com/{repo}/releases/tag/{tag}",
+                 "GitHub Release", extra=extra)
     return str(folder), repo, tag
 
 def range_download(url, start, end, base_dir):
