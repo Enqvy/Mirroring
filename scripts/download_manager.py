@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mirror Manager – production release (ZIP backend).
+Mirror Manager – production release (ZIP backend, store‑only for .zip/.7z).
 
 Fetches the latest GitHub releases (or direct URLs), compresses them
 into .zip containers (Deflate, level 9 by default, configurable),
@@ -10,7 +10,8 @@ Key features:
 - Reads repo.txt for sources; supports inline flags [nocompress], [pre], [lfs].
 - Incremental: skips releases when the tag hasn't changed and direct downloads
   when they’ve already been mirrored.
-- Compresses everything into .zip containers (Deflate, level 9).
+- Compresses everything into .zip containers (Deflate, level 9) **except**
+  `.zip` and `.7z` files, which are stored as‑is (only split if > 99 MB).
 - Files larger than 99 MB are automatically split using zip's multi‑volume feature.
 - Per‑file CRC32 checksums are shown in the file list, alongside the compression
   percentage (e.g., -12.3%).
@@ -48,7 +49,7 @@ _DEFAULTS = {
     "max_parallel": 4,
     "compression_level": 9,                  # 0 = store, 1‑9 = deflate effort
     "compression_method": "Deflate",         # kept for compatibility, ignored
-    "extract_archive_exts": [".zip", ".7z"],
+    "extract_archive_exts": [".zip", ".jar", ".war", ".ear"],
     "skip_asset_exts": [
         ".sha256", ".sha256sum", ".sha512", ".sha512sum",
         ".sha1", ".sha1sum", ".md5", ".md5sum",
@@ -305,6 +306,10 @@ def _zip_available():
         raise RuntimeError("zip is not installed – install zip")
 
 def _zip_cmd(filepath, out_zip, split=False):
+    """Build a zip command with appropriate compression level.
+    - level = COMPRESSION_LEVEL (0 = store, 1‑9 = deflate)
+    - if split: add -s SPLIT_MBm
+    """
     level = COMPRESSION_LEVEL
     cmd = ["zip", "-r"]
     if level == 0:
@@ -317,8 +322,10 @@ def _zip_cmd(filepath, out_zip, split=False):
     cmd.append(f'"{filepath}"')
     return cmd
 
-def _archive_single(filepath, out_zip):
+def _archive_single(filepath, out_zip, level=None):
     """Compress a single file into a .zip archive."""
+    if level is None:
+        level = COMPRESSION_LEVEL
     cmd = _zip_cmd(filepath, out_zip, split=False)
     run(" ".join(cmd), shell=True)
 
@@ -328,14 +335,8 @@ def _archive_dir(tmpdir, out_zip):
     run(" ".join(cmd), shell=True)
 
 def _store_archive(filepath, out_zip):
-    """Create a .zip container with NO compression (store) for a non‑archive file."""
-    global COMPRESSION_LEVEL
-    saved_level = COMPRESSION_LEVEL
-    COMPRESSION_LEVEL = 0
-    try:
-        _archive_single(filepath, out_zip, level=0)
-    finally:
-        COMPRESSION_LEVEL = saved_level
+    """Create a .zip container with NO compression (store)."""
+    _archive_single(filepath, out_zip, level=0)
 
 def _split_store(filepath):
     """Split a single file into zip volumes (store mode). Removes the original.
@@ -354,16 +355,19 @@ def _split_store(filepath):
         raise RuntimeError(f"Failed to delete original after split: {filepath}")
 
 # ------------------------------------------------------------------------------
-# Archive logic
+# Archive logic – store for .zip/.7z, compress everything else
 # ------------------------------------------------------------------------------
 def archive_file(filepath, folder, no_compress=False):
     fp = Path(filepath)
     ext = fp.suffix.lower()
     orig = fp.stat().st_size
+    # --- automatically store already‑compressed archives ---
+    if ext in {'.zip', '.7z'}:
+        no_compress = True
     log(f"🗜️  {fp.name} ({human_size(orig)})" + (" (nocompress)" if no_compress else ""))
     check_disk_space(folder, orig * 2)
 
-    # --------------- NOCOMPRESS: keep raw if small, split if large ---------------
+    # --------------- NOCOMPRESS / ARCHIVE ---------------
     if no_compress:
         if orig <= SPLIT_MB * 1024 * 1024:
             log(f"📄 Keeping raw (≤ {SPLIT_MB} MB)")
@@ -372,7 +376,7 @@ def archive_file(filepath, folder, no_compress=False):
         _split_store(filepath)
         return os.path.splitext(filepath)[0] + ".zip"
 
-    # --------------- NORMAL PATH (compression) ---------------
+    # --------------- NORMAL COMPRESSION ---------------
     out_zip = os.path.join(folder, fp.stem + ".zip")
     tmp_extract = None
     compressed_ok = False
@@ -393,7 +397,7 @@ def archive_file(filepath, folder, no_compress=False):
         new_size = os.path.getsize(out_zip)
         compressed_ok = True
     except Exception as e:
-        log(f"Compression failed: {e}, fallback to store", "WARN")
+        log(f"Compression failed: {e}, keeping original as‑is", "WARN")
     finally:
         if tmp_extract and os.path.exists(tmp_extract):
             shutil.rmtree(tmp_extract, ignore_errors=True)
@@ -403,30 +407,14 @@ def archive_file(filepath, folder, no_compress=False):
         os.remove(filepath)
         final = out_zip
     else:
+        # either compression failed or didn't save space – keep original
         if compressed_ok:
             log("⚠️  No space saved → using original")
             if os.path.exists(out_zip):
                 os.remove(out_zip)
         else:
-            # compression failed – fall back to store for non‑archives,
-            # for archives just keep the original file unchanged
-            if ext not in EXTRACT_ARCHIVE_EXTS:
-                log("📦 Store inside .zip")
-                _store_archive(filepath, out_zip)
-                os.remove(filepath)
-                final = out_zip
-            else:
-                log("📄 Keeping original archive unchanged")
-        # if not already set (meaning we kept original), set final to original
-        if not compressed_ok:
-            final = filepath
-        # else case where compressed but no space saved: we kept original file path
-        else:
-            final = filepath
-
-        # Ensure we log store size if we created it
-        if final == out_zip:
-            log(f"📦 Store size: {human_size(os.path.getsize(final))}")
+            log("📄 Keeping original file unchanged")
+        final = filepath
 
     # ---- GUARANTEE: no file > SPLIT_MB leaves this function ----
     limit = SPLIT_MB * 1024 * 1024
@@ -494,6 +482,7 @@ def github_api(url):
 # Helper: compute per‑file compression savings
 # ------------------------------------------------------------------------------
 def _compute_savings(folder, wanted):
+    """Return dict {file_name: '-12.3%'} for each asset in wanted list."""
     savings = {}
     for name, _, orig_size in wanted:
         stem = Path(name).stem
@@ -553,6 +542,7 @@ def download_file(url, dest_dir):
     return download_asset(url, dest_dir)
 
 def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
+    # Check if we already processed this exact URL (direct downloads)
     state = load_state()
     if url in state.get("downloads", {}):
         folder = state["downloads"][url].get("folder")
