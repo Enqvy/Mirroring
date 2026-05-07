@@ -12,14 +12,14 @@ A complete reference for the **GitHub‑based download & archive manager**.
 - Renames extension‑less files using MIME‑type detection.
 - Pushes the mirrored files back to your own GitHub repository.
 
-Everything runs as a **GitHub Actions workflow** every 6 hours (or on push).
+Everything runs as a **GitHub Actions workflow** every 12 hours (or on push).
 
 ---
 
 ## 2. Setup
 
 ### a. Workflow file
-Copy the workflow from the repository into `.github/workflows/download.yml`.  
+Copy the workflow from the repository into `.github/workflows/downloader.yml`.  
 No additional secrets are needed (the built‑in `GITHUB_TOKEN` is used).  
 Make sure the workflow has `contents: write` permission.
 
@@ -38,7 +38,7 @@ Your repository should contain:
 ├── scripts/download_manager.py   ← the Python script
 ├── repo.txt                      ← your list of sources
 ├── state.json                    ← auto‑generated, tracks last known release
-└── README.md                     ← auto‑generated index
+└── INDEX.md                     ← auto‑generated index
 ```
 
 ---
@@ -147,7 +147,7 @@ Add `[nocompress]` anywhere in the commit message.
 It applies to **all URLs** in that commit.
 
 ```
-https://dl.iamworker.com/s7/v5/download/...?token=... [nocompress]
+https://iamworker.com/s7/v5/download/...?token=... [nocompress]
 ```
 
 ---
@@ -182,7 +182,7 @@ Folder name format: `{release‑name}_{tag}` or `{filename}_{timestamp}`.
 
 Inside each folder:
 - **The mirrored file(s)** – either raw or inside a `.7z` container.
-- `README.md` – list of files with sizes and links.
+- `INDEX.md` – list of files with sizes and links.
 - `metadata.json` – URL, method, CRC32 checksums, and asset info.
 
 All files are accessible via raw GitHub links.
@@ -245,7 +245,7 @@ This allows users to verify their downloads without the overhead of SHA‑256.
 
 - Use **glob filters** to catch version‑independent installers (e.g. `app_*_setup.exe`).
 - Use **`[nocompress]`** for text‑based rulesets or configuration files that are updated frequently and are already small.
-- The workflow runs every **6 hours** – no need to poll manually.
+- The workflow runs every **12 hours** – no need to poll manually.
 - If a push fails because of a 100 MB limit, check the logs – the split guarantee should have kicked in; if not, temporarily increase `SPLIT_MB` to 95.
 
 ---
