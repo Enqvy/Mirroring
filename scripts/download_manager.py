@@ -1,16 +1,29 @@
 #!/usr/bin/env python3
 """
-Mirror manager â€“ fast Deflate64, incremental, parallel, CRC32 integrity, progress bars.
-Every file becomes a .7z container (split at 99 MB if needed).
+Mirror manager – fast Deflate64, incremental, parallel, CRC32 integrity, progress bars.
+Every file ends up inside a .7z container (split at 99 MB if needed).
 Use [nocompress] in repo.txt or commit message to skip compression.
-- Files â‰¤99 MB stay raw (no wrapping)
-- Larger files are split into storeâ€‘mode .7z volumes
+- Files ≤99 MB stay raw (no wrapping)
+- Larger files are split into store‑mode .7z volumes
 Files without a recognised extension are renamed using MIME type detection;
 if the format can't be determined, they are kept as-is.
 Skips checksum/signature files automatically.
 """
 
-import os, sys, json, re, time, shutil, subprocess, argparse, tempfile, zipfile, shlex, fnmatch, zlib, mimetypes
+import os
+import sys
+import json
+import re
+import time
+import shutil
+import subprocess
+import argparse
+import tempfile
+import zipfile
+import shlex
+import fnmatch
+import zlib
+import mimetypes
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import unquote, quote
@@ -71,26 +84,26 @@ def run(cmd, check=True, quiet=False, shell=None, timeout=3600):
     if shell is None:
         shell = any(c in cmd for c in '|&;<>()$`*?[]~')
     if not quiet:
-        log(f"âš¡ {cmd}", "DEBUG")
+        log(f"⚡ {cmd}", "DEBUG")
     try:
         if not shell and isinstance(cmd, str):
             proc = subprocess.run(cmd.split(), capture_output=True, text=True, timeout=timeout)
         else:
             proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         if proc.stdout.strip() and not quiet:
-            log(f"â†³ {proc.stdout.strip()}", "DEBUG")
+            log(f"↳ {proc.stdout.strip()}", "DEBUG")
         if check and proc.returncode != 0:
             err = proc.stderr.strip()
-            log(f"âŒ Command failed: {cmd}", "ERROR")
+            log(f"❌ Command failed: {cmd}", "ERROR")
             if err:
                 log(f"   stderr: {err}", "ERROR")
             raise RuntimeError(f"Command failed (exit {proc.returncode}): {cmd}")
         return proc.stdout.strip()
     except subprocess.TimeoutExpired:
-        log(f"â° Timeout after {timeout}s: {cmd}", "ERROR")
+        log(f"⏰ Timeout after {timeout}s: {cmd}", "ERROR")
         raise RuntimeError(f"Command timed out: {cmd}")
     except Exception as e:
-        log(f"ðŸ’¥ Unexpected error running command: {e}", "ERROR")
+        log(f"💥 Unexpected error running command: {e}", "ERROR")
         raise
 
 def check_disk_space(path, required_bytes):
@@ -139,24 +152,22 @@ def fix_extension(filepath):
     Returns the (possibly new) filepath.
     """
     fpath = Path(filepath)
-    if fpath.suffix:                     # already has an extension
+    if fpath.suffix:
         return filepath
 
     mime = get_mime_type(filepath)
-    if not mime:                         # couldn't determine, keep original
-        log(f"âš ï¸  Cannot detect type for {fpath.name}, keeping as-is", "WARN")
+    if not mime:
+        log(f"⚠️  Cannot detect type for {fpath.name}, keeping as-is", "WARN")
         return filepath
 
-    # Use Python's comprehensive MIME database
     ext = mimetypes.guess_extension(mime, strict=False)
     if ext:
         new_path = fpath.with_suffix(ext)
         fpath.rename(new_path)
-        log(f"ðŸ”§ Renamed {fpath.name} â†’ {new_path.name} (mime: {mime})")
+        log(f"🔧 Renamed {fpath.name} → {new_path.name} (mime: {mime})")
         return str(new_path)
 
-    # If mimetypes doesn't know it either, keep original
-    log(f"âš ï¸  Unknown MIME type '{mime}' for {fpath.name}, keeping as-is", "WARN")
+    log(f"⚠️  Unknown MIME type '{mime}' for {fpath.name}, keeping as-is", "WARN")
     return filepath
 
 # ------------------------------------------------------------------------------
@@ -166,7 +177,7 @@ def load_state():
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE) as f:
             return json.load(f)
-    log("ðŸ“„ No state.json â€“ starting fresh")
+    log("📄 No state.json – starting fresh")
     return {"repos": {}, "downloads": {}, "ranges": {}}
 
 def save_state(state):
@@ -178,7 +189,7 @@ def write_metadata(folder, url, method, **extra):
     path = os.path.join(folder, "metadata.json")
     with open(path, "w") as f:
         json.dump({"url": url, "method": method, **extra}, f, indent=2)
-    log(f"ðŸ“ metadata â†’ {path}")
+    log(f"📝 metadata → {path}")
 
 def write_readme(folder, title, url, method, extra=None):
     lines = [
@@ -205,9 +216,10 @@ def write_readme(folder, title, url, method, extra=None):
     readme_path = os.path.join(folder, "README.md")
     with open(readme_path, "w") as f:
         f.write("\n".join(lines))
-    log(f"ðŸ“ README â†’ {readme_path}")
+    log(f"📝 README → {readme_path}")
 
 def update_root_readme(state):
+    """Regenerate the global index of all downloads (INDEX.md)."""
     content = ["# Downloads", "", "---", ""]
     for section_key in ["downloads", "repos"]:
         entries = state.get(section_key, {})
@@ -220,11 +232,11 @@ def update_root_readme(state):
             else:
                 content.append(f"## {Path(folder).name}")
             content += ["", "---", ""]
-    Path("README.md").write_text("\n".join(content))
-    log("ðŸ“„ Root README.md regenerated")
+    Path("INDEX.md").write_text("\n".join(content))
+    log("📄 INDEX.md regenerated")
 
 # ------------------------------------------------------------------------------
-# Parsing filters â€“ supports "nocompress" flag
+# Parsing filters – supports "nocompress" flag
 # ------------------------------------------------------------------------------
 def parse_filter(line):
     """Return (repo, filters, no_compress)."""
@@ -283,14 +295,14 @@ def detect_no_compress(msg):
     return bool(NOCOMPRESS_COMMIT.search(msg))
 
 # ------------------------------------------------------------------------------
-# 7z helpers â€“ fast Deflate64 level 5
+# 7z helpers – fast Deflate64 level 5
 # ------------------------------------------------------------------------------
 def _7z_available():
     try:
         subprocess.run(["7z"], capture_output=True, timeout=5)
         return True
     except Exception:
-        raise RuntimeError("7z is not installed â€“ please install p7zip-full")
+        raise RuntimeError("7z is not installed – please install p7zip-full")
 
 def _7z_cmd_base(compression_level, split=False):
     """Build a 7z command. Level 0 = store, others = Deflate64 with given effort level."""
@@ -316,11 +328,10 @@ def _create_store_archive(filepath, out_7z):
     _archive_single(filepath, out_7z, level=0)
 
 def _split_store(filepath):
-    """Split a single file into 7z storeâ€‘mode volumes. Removes the original.
+    """Split a single file into 7z store‑mode volumes. Removes the original.
     If the file already ends with .7z, output base is adjusted to avoid name clash."""
-    base = os.path.splitext(filepath)[0]      # e.g. .../file  or .../file.7z -> .../file
+    base = os.path.splitext(filepath)[0]
     if filepath.lower().endswith('.7z'):
-        # Prevent output == input
         base = filepath[:-len('.7z')] + '_split'
     out = base + ".7z"
     cmd = [
@@ -331,7 +342,7 @@ def _split_store(filepath):
         f'"{out}"',
         f'"{filepath}"'
     ]
-    log(f"âœ‚ï¸  Splitting {os.path.basename(filepath)} into {SPLIT_MB} MB volumes")
+    log(f"✂️  Splitting {os.path.basename(filepath)} into {SPLIT_MB} MB volumes")
     run(" ".join(cmd), shell=True)
     if os.path.exists(filepath):
         os.remove(filepath)
@@ -339,24 +350,24 @@ def _split_store(filepath):
         raise RuntimeError(f"Failed to delete original after split: {filepath}")
 
 # ------------------------------------------------------------------------------
-# Smart archiving â€“ APK stays whole, ZIP/JAR/WAR/EAR extracted, nocompress flag
+# Smart archiving – APK stays whole, ZIP/JAR/WAR/EAR extracted, nocompress flag
 # ------------------------------------------------------------------------------
 def archive_file(filepath, folder, no_compress=False):
     fpath = Path(filepath)
     ext = fpath.suffix.lower()
     orig_size = fpath.stat().st_size
-    log(f"ðŸ—œï¸  Processing {fpath.name} ({human_size(orig_size)}){' (nocompress)' if no_compress else ''}")
+    log(f"🗜️  Processing {fpath.name} ({human_size(orig_size)}){' (nocompress)' if no_compress else ''}")
     check_disk_space(folder, orig_size * 2)
 
     # --------------- NOCOMPRESS: keep raw if small, split if large ---------------
     if no_compress:
         limit = SPLIT_MB * 1024 * 1024
         if orig_size <= limit:
-            log(f"ðŸ“„ Keeping raw file (under {SPLIT_MB} MB, no compression)")
-            return filepath                # â† leaves the file untouched
+            log(f"📄 Keeping raw file (under {SPLIT_MB} MB, no compression)")
+            return filepath
         else:
-            log(f"ðŸ“¦ Large file, splitting into storeâ€‘mode volumes")
-            _split_store(filepath)         # wraps in .7z, splits, removes original
+            log(f"📦 Large file, splitting into store‑mode volumes")
+            _split_store(filepath)
             return os.path.splitext(filepath)[0] + ".7z"
 
     # --------------- NORMAL PATH (compression) ---------------
@@ -366,7 +377,7 @@ def archive_file(filepath, folder, no_compress=False):
 
     try:
         if ext in EXTRACT_ARCHIVE_EXTS:
-            log(f"ðŸ“‚ Extracting {fpath.name} for better compression")
+            log(f"📂 Extracting {fpath.name} for better compression")
             tmp_extract = tempfile.mkdtemp(prefix="ext_", dir=folder)
             with zipfile.ZipFile(filepath, 'r') as zf:
                 for member in zf.namelist():
@@ -386,27 +397,27 @@ def archive_file(filepath, folder, no_compress=False):
             shutil.rmtree(tmp_extract, ignore_errors=True)
 
     if compressed_ok and new_size < orig_size:
-        log(f"âœ… Compressed: {human_size(new_size)} (saved {human_size(orig_size - new_size)})")
+        log(f"✅ Compressed: {human_size(new_size)} (saved {human_size(orig_size - new_size)})")
         os.remove(filepath)
         final_archive = out_7z
     else:
         if compressed_ok:
-            log(f"âš ï¸  No space saved, using store")
+            log(f"⚠️  No space saved, using store")
             os.remove(out_7z)
         else:
-            log("ðŸ“¦ Store original inside .7z")
+            log("📦 Store original inside .7z")
         _create_store_archive(filepath, out_7z)
         os.remove(filepath)
         final_archive = out_7z
-        log(f"ðŸ“¦ Store archive: {human_size(os.path.getsize(final_archive))}")
+        log(f"📦 Store archive: {human_size(os.path.getsize(final_archive))}")
 
     # ---- GUARANTEE: no file > SPLIT_MB leaves this function ----
     limit = SPLIT_MB * 1024 * 1024
     while os.path.exists(final_archive) and os.path.getsize(final_archive) > limit:
-        log(f"  ðŸ” Splitting oversized: {os.path.basename(final_archive)} ({human_size(os.path.getsize(final_archive))})")
+        log(f"  🔁 Splitting oversized: {os.path.basename(final_archive)} ({human_size(os.path.getsize(final_archive))})")
         _split_store(final_archive)
         if os.path.exists(final_archive):
-            log(f"  âŒ Split failed to remove original, retrying", "ERROR")
+            log(f"  ❌ Split failed to remove original, retrying", "ERROR")
             _split_store(final_archive)
             if os.path.exists(final_archive):
                 raise RuntimeError("Cannot split file despite repeated attempts")
@@ -420,14 +431,14 @@ def ensure_all_files_small(folder):
     for f in Path(folder).iterdir():
         if f.is_file() and f.name not in ("README.md", "metadata.json"):
             if f.stat().st_size > limit:
-                log(f"âš ï¸  Safety split: {f.name} ({human_size(f.stat().st_size)})")
+                log(f"⚠️  Safety split: {f.name} ({human_size(f.stat().st_size)})")
                 _split_store(str(f))
 
 # ------------------------------------------------------------------------------
 # GitHub API
 # ------------------------------------------------------------------------------
 def github_api(url):
-    log(f"ðŸŒ GET {url}")
+    log(f"🌐 GET {url}")
     headers = {"User-Agent": UA}
     if GITHUB_TOKEN:
         headers["Authorization"] = f"token {GITHUB_TOKEN}"
@@ -436,7 +447,7 @@ def github_api(url):
     return resp.json()
 
 # ------------------------------------------------------------------------------
-# Download helpers â€“ incremental + parallel
+# Download helpers – incremental + parallel
 # ------------------------------------------------------------------------------
 def download_asset(url, dest):
     """Download a single asset, fix missing extensions, return local path."""
@@ -445,10 +456,10 @@ def download_asset(url, dest):
     fname = unquote(os.path.basename(url.split("?")[0]))
     local_path = dest / fname
     if local_path.exists():
-        log(f"âœ“ Already exists: {fname}")
+        log(f"✓ Already exists: {fname}")
         return str(local_path)
 
-    log(f"â¬‡ï¸  {fname}")
+    log(f"⬇️  {fname}")
     cmd = (f'aria2c --summary-interval=2 --continue --max-connection-per-server=8 '
            f'--split=8 --min-split-size=1M --dir="{dest}" --out="{fname}" '
            f'--timeout=120 --max-tries=5 "{url}"')
@@ -456,7 +467,6 @@ def download_asset(url, dest):
     if not local_path.exists() or local_path.stat().st_size == 0:
         raise RuntimeError(f"Download failed: {fname}")
 
-    # Fix extension if missing
     return fix_extension(str(local_path))
 
 def download_file(url, dest_dir):
@@ -469,7 +479,7 @@ def download_and_chunk(url, dest_base, no_compress=False):
     folder_name = f"{basename}_{ts}"
     folder = Path(dest_base) / folder_name
     folder.mkdir(parents=True)
-    log(f"ðŸ“ {folder}")
+    log(f"📁 {folder}")
 
     path = download_file(url, str(folder))
     if not path:
@@ -504,10 +514,10 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
     folder = Path(dest_dir) / folder_name
 
     if folder.exists():
-        log(f"ðŸ—‘ï¸  Removing leftover folder: {folder}")
+        log(f"🗑️  Removing leftover folder: {folder}")
         shutil.rmtree(str(folder), ignore_errors=True)
     folder.mkdir(parents=True)
-    log(f"ðŸ“ {folder}")
+    log(f"📁 {folder}")
 
     # Build asset list from release API
     all_assets = release.get("assets", [])
@@ -518,12 +528,12 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
         if filters and filters != ["all"] and not asset_matches(name, filters):
             continue
         if is_skip_asset(name):
-            log(f"  â­ï¸  Skipping checksum/signature: {name}")
+            log(f"  ⏭️  Skipping checksum/signature: {name}")
             continue
         wanted_assets.append((name, a.get("browser_download_url"), a.get("size")))
 
     if not wanted_assets:
-        log("âš ï¸  No matching assets found.")
+        log("⚠️  No matching assets found.")
         return str(folder), repo, tag
 
     # Incremental check
@@ -543,11 +553,11 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
             prev_set.add((p["name"], p["size"]))
     unchanged = current_set & prev_set
     if unchanged == current_set and prev_set:
-        log(f"âœ… No changes in release {tag}, skipping.")
+        log(f"✅ No changes in release {tag}, skipping.")
         return prev_folder, repo, tag
 
     # Download assets in parallel
-    log(f"â¬‡ï¸  Downloading {len(wanted_assets)} assets (parallel={MAX_PARALLEL})")
+    log(f"⬇️  Downloading {len(wanted_assets)} assets (parallel={MAX_PARALLEL})")
     with ThreadPoolExecutor(max_workers=MAX_PARALLEL) as executor:
         futures = {}
         for name, url, size in wanted_assets:
@@ -556,9 +566,9 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
             name = futures[future]
             try:
                 path = future.result()
-                log(f"  âœ“ {name}")
+                log(f"  ✓ {name}")
             except Exception as e:
-                log(f"  âŒ {name}: {e}")
+                log(f"  ❌ {name}: {e}")
 
     # Process each remaining file
     for f in sorted(folder.iterdir()):
@@ -577,13 +587,13 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
     return str(folder), repo, tag
 
 def range_download(url, start, end, base_dir):
-    log(f"ðŸ“¡ Range download: {url} bytes {start}-{end}")
+    log(f"📡 Range download: {url} bytes {start}-{end}")
     state = load_state()
     folder = None
     if url in state["ranges"]:
         folder = Path(state["ranges"][url]["folder"])
         if folder.exists():
-            log(f"â™»ï¸  Reusing existing range folder: {folder}")
+            log(f"♻️  Reusing existing range folder: {folder}")
         else:
             folder = None
     if not folder:
@@ -591,11 +601,11 @@ def range_download(url, start, end, base_dir):
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         folder = Path(base_dir) / f"{bname}_{ts}"
         folder.mkdir(parents=True, exist_ok=True)
-        log(f"ðŸ“ New range folder: {folder}")
+        log(f"📁 New range folder: {folder}")
 
     tmp_file = folder / "downloaded_range.tmp"
     range_size = end - start + 1
-    log(f"ðŸ“¥ Downloading {human_size(range_size)} range [{start}-{end}]")
+    log(f"📥 Downloading {human_size(range_size)} range [{start}-{end}]")
     check_disk_space(str(folder), range_size * 2)
 
     run(
@@ -631,7 +641,7 @@ def range_download(url, start, end, base_dir):
     (folder / "README.md").write_text(readme)
     state["ranges"][url] = {"folder": str(folder), "last_range_end": end}
     save_state(state)
-    log(f"âœ… Range chunk saved â†’ {folder}")
+    log(f"✅ Range chunk saved → {folder}")
     return str(folder)
 
 # ------------------------------------------------------------------------------
@@ -645,7 +655,7 @@ def batch_commit_and_push(new_folders):
             if f.is_file():
                 all_files.append(str(f))
     if not all_files:
-        log("â„¹ï¸  No new files to commit")
+        log("ℹ️  No new files to commit")
         return
 
     all_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
@@ -667,12 +677,12 @@ def batch_commit_and_push(new_folders):
 def commit_and_push_batch(batch_files, batch_num, total_batches):
     msg = f"Sync downloads batch {batch_num}/{total_batches} [skip ci]"
     batch_size = sum(os.path.getsize(f) for f in batch_files)
-    log(f"ðŸ“¦ Batch {batch_num}/{total_batches}: {len(batch_files)} files ({human_size(batch_size)})")
+    log(f"📦 Batch {batch_num}/{total_batches}: {len(batch_files)} files ({human_size(batch_size)})")
     for f in batch_files:
         run(f'git add -f "{f}"', shell=True, quiet=True)
     run(f'git commit -m "{msg}"', shell=True)
     run("git push", shell=True)
-    log(f"âœ… Pushed batch {batch_num}")
+    log(f"✅ Pushed batch {batch_num}")
 
 # ------------------------------------------------------------------------------
 # State maintenance
@@ -685,7 +695,7 @@ def cleanup_missing_folders(state):
             if v.get("folder") and not os.path.exists(v["folder"])
         ]
         for k in to_remove:
-            log(f"ðŸ§¹ Pruning stale state: {k}")
+            log(f"🧹 Pruning stale state: {k}")
             del state[section][k]
             changed = True
     to_remove = [
@@ -707,7 +717,7 @@ def prune_old_state_entries(state, max_age_days=90):
             and os.path.getmtime(v["folder"]) < cutoff
         ]
         for k in to_remove:
-            log(f"ðŸ§¹ Pruning old entry: {k}")
+            log(f"🧹 Pruning old entry: {k}")
             del state[section][k]
             changed = True
     return changed
@@ -716,7 +726,7 @@ def remove_old_releases(repo_name, state):
     if repo_name in state["repos"]:
         old_folder = state["repos"][repo_name].get("folder")
         if old_folder:
-            log(f"ðŸ—‘ï¸  Removing old release: {old_folder}")
+            log(f"🗑️  Removing old release: {old_folder}")
             run(f"git rm -r --ignore-unmatch {old_folder} 2>/dev/null || true",
                 check=False, quiet=True, shell=True)
             if os.path.exists(old_folder):
@@ -745,14 +755,14 @@ def _normalize_line(line):
 
 def process_updates(no_push=False):
     _7z_available()
-    log("ðŸ”„ Starting repo.txt update", "INFO")
+    log("🔄 Starting repo.txt update", "INFO")
     log("Compression: Deflate64 level 5 (fast), parallel downloads, incremental")
     state = load_state()
     if cleanup_missing_folders(state): save_state(state)
     if prune_old_state_entries(state): save_state(state)
 
     if not Path("repo.txt").exists():
-        log("âš ï¸  repo.txt not found â€“ skipping updates")
+        log("⚠️  repo.txt not found – skipping updates")
         return
 
     lines = [l.strip() for l in open("repo.txt") if l.strip() and not l.startswith('#')]
@@ -764,24 +774,24 @@ def process_updates(no_push=False):
         if not repo:
             continue
         if repo.startswith("http://") or repo.startswith("https://"):
-            log(f"\nðŸ”— Direct URL: {repo}")
+            log(f"\n🔗 Direct URL: {repo}")
             try:
                 folder = download_and_chunk(repo, "downloads", no_compress=no_compress)
                 state["downloads"][repo] = {"folder": folder}
                 if folder: new_folders.append(folder)
             except Exception as e:
-                log(f"âŒ Failed to process direct URL: {e}", "ERROR")
+                log(f"❌ Failed to process direct URL: {e}", "ERROR")
         else:
             current_repos.append(repo)
 
     if cleanup_removed_repos(state, current_repos):
-        log("ðŸ§¹ Removed old repos not in repo.txt")
+        log("🧹 Removed old repos not in repo.txt")
 
     for line in lines:
         repo, filters, no_compress = _normalize_line(line)
         if not repo or repo.startswith("http://") or repo.startswith("https://"):
             continue
-        log(f"\nðŸ“‹ Repo: {repo} (filter: {filters or 'all'}, nocompress: {no_compress})")
+        log(f"\n📋 Repo: {repo} (filter: {filters or 'all'}, nocompress: {no_compress})")
         remove_old_releases(repo, state)
         try:
             folder, _, tag = github_release(
@@ -791,19 +801,19 @@ def process_updates(no_push=False):
             state["repos"][repo] = {"folder": folder, "tag": tag}
             new_folders.append(folder)
         except Exception as e:
-            log(f"âŒ Failed to process release {repo}: {e}", "ERROR")
+            log(f"❌ Failed to process release {repo}: {e}", "ERROR")
 
     save_state(state)
     update_root_readme(state)
-    new_folders.extend(["state.json", "README.md"])
+    new_folders.extend(["state.json", "INDEX.md"])
     if not no_push:
         batch_commit_and_push(new_folders)
-    log("âœ… Repo updates finished")
+    log("✅ Repo updates finished")
 
 def process_commit(custom_msg=None, no_push=False):
     _7z_available()
     msg = custom_msg or run("git log -1 --pretty=%B", shell=True)
-    log(f"ðŸ“© Commit message: {msg}")
+    log(f"📩 Commit message: {msg}")
     state = load_state()
     if cleanup_missing_folders(state): save_state(state)
     if prune_old_state_entries(state): save_state(state)
@@ -811,15 +821,15 @@ def process_commit(custom_msg=None, no_push=False):
     # Check for global [nocompress] flag in the commit message
     no_compress = detect_no_compress(msg)
     if no_compress:
-        log("ðŸ·ï¸  [nocompress] flag detected in commit â€“ all files will be kept raw")
+        log("🏷️  [nocompress] flag detected in commit – all files will be kept raw")
 
     new_folders = []
     urls = URL_PATTERN.findall(msg)
 
     if len(urls) > 1:
-        log(f"ðŸ“¦ Processing {len(urls)} separate URLs")
+        log(f"📦 Processing {len(urls)} separate URLs")
         for url in urls:
-            log(f"\nðŸŒ {url}")
+            log(f"\n🌐 {url}")
             try:
                 if GITHUB_RELEASE_PATTERN.match(url):
                     folder, repo, tag = github_release(url, "repos", ["all"], no_compress=no_compress)
@@ -830,13 +840,13 @@ def process_commit(custom_msg=None, no_push=False):
                         state["downloads"][url] = {"folder": folder}
                 new_folders.append(folder)
             except Exception as e:
-                log(f"âŒ {e}", "ERROR")
+                log(f"❌ {e}", "ERROR")
         save_state(state)
         update_root_readme(state)
-        new_folders.extend(["state.json", "README.md"])
+        new_folders.extend(["state.json", "INDEX.md"])
         if not no_push:
             batch_commit_and_push(new_folders)
-        log(f"ðŸŽ‰ Done processing {len(urls)} URLs")
+        log(f"🎉 Done processing {len(urls)} URLs")
         return
 
     range_m = RANGE_PATTERN.search(msg)
@@ -847,17 +857,17 @@ def process_commit(custom_msg=None, no_push=False):
         folder = range_download(url, start, end, "downloads")
         update_root_readme(state)
         new_folders.append(folder)
-        new_folders.extend(["state.json", "README.md"])
+        new_folders.extend(["state.json", "INDEX.md"])
         if not no_push:
             batch_commit_and_push(new_folders)
         return
 
     url_m = URL_PATTERN.search(msg)
     if not url_m:
-        log("â„¹ï¸  No URL found in commit")
+        log("ℹ️  No URL found in commit")
         return
     url = url_m.group(1)
-    log(f"ðŸŒ Processing single URL: {url}")
+    log(f"🌐 Processing single URL: {url}")
     try:
         if GITHUB_RELEASE_PATTERN.match(url):
             folder, repo, tag = github_release(url, "repos", ["all"], no_compress=no_compress)
@@ -870,12 +880,12 @@ def process_commit(custom_msg=None, no_push=False):
         if folder:
             save_state(state)
             update_root_readme(state)
-            new_folders.extend(["state.json", "README.md"])
+            new_folders.extend(["state.json", "INDEX.md"])
             if not no_push:
                 batch_commit_and_push(new_folders)
-        log(f"ðŸŽ‰ Done â†’ {folder}")
+        log(f"🎉 Done → {folder}")
     except Exception as e:
-        log(f"âŒ Failed: {e}", "ERROR")
+        log(f"❌ Failed: {e}", "ERROR")
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -891,5 +901,5 @@ if __name__ == "__main__":
         else:
             process_commit(custom_msg=args.msg, no_push=args.no_push)
     except Exception as e:
-        log(f"ðŸ”¥ Fatal error: {e}", "ERROR")
+        log(f"🔥 Fatal error: {e}", "ERROR")
         raise
