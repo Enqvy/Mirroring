@@ -1,23 +1,22 @@
+# Download Manager
+
 Automated mirroring of GitHub releases and direct URLs.  
-Every asset is wrapped inside a **`.zip` container** (with optional compression) and
-split into ⩽ 99 MB volumes so they never exceed GitHub’s file size limit.
+Every asset is wrapped inside a **`.zip` container** (optional compression) and split into ⩽ 99 MB volumes so they never exceed GitHub’s file size limit.  
+Already‑compressed archives (`.zip`, `.7z`) are stored as‑is – only split if they exceed the threshold.  
+All other files are compressed with **Deflate (level 9)** by default.
 
 ---
 
 ## ⚠️ Disclaimer
 
 **This tool is provided “as is”, without warranty of any kind.**  
-I do **not** take any responsibility for the content that is downloaded, stored,
-or distributed by anyone using this script.  
+I do **not** take any responsibility for the content that is downloaded, stored, or distributed by anyone using this script.  
 
-All files mirrored by this repository are the **property of their respective
-owners**. This project is intended for **personal/archival use, software
-preservation, and fair‑use mirroring** only.  
+All files mirrored by this repository are the **property of their respective owners**. This project is intended for **personal/archival use, software preservation, and fair‑use mirroring** only.  
 
-If you are a copyright holder and believe your work is being mirrored without
-permission, please open an issue and the content will be removed immediately.
+If you are a copyright holder and believe your work is being mirrored without permission, please open an issue and the content will be removed immediately.
 
-**I do not endorse, verify, or guarantee the safety of any linked content.**
+**I do not endorse, verify, or guarantee the safety of any linked content.**  
 Download and use mirrored files at your own risk.
 
 ---
@@ -28,18 +27,19 @@ Download and use mirrored files at your own risk.
 
 ---
 
-## How the manager works
+## How it works
 
 1. Reads `repo.txt` for a list of GitHub repositories (or direct URLs).  
 2. Fetches the **latest** release (including pre‑releases if `[pre]` is set).  
 3. Downloads only the assets that match your filters.  
-4. Compresses each asset into a **`.zip`** archive (Deflate, level 9 by default).  
-   - If compression doesn’t reduce the file size, the original is kept as‑is.  
-5. Splits any file larger than **99 MB** into store‑mode `.zip` volumes.  
-6. Writes per‑folder `README.md` files (shown inside `INDEX.md`).  
-7. Pushes everything back to your repository.
+4. **`.zip` / `.7z` files** are left untouched (store mode) – they are never re‑compressed.  
+5. **All other files** are compressed into a `.zip` archive with Deflate level 9.  
+   - If compression doesn’t reduce the size, the original file is kept as‑is.  
+6. Any file larger than **99 MB** is split into store‑mode `.zip` volumes.  
+7. Writes per‑folder `README.md` files (shown inside `INDEX.md`).  
+8. Pushes everything back to your repository.
 
-All settings can be tweaked in **`config.toml`** (compression level, split size, etc.).
+All settings can be adjusted in **`config.toml`** (compression level, split size, etc.).
 
 ---
 
@@ -76,11 +76,9 @@ Flags can be combined: `[pre, nocompress, all]`
 
 ## Commit‑triggered downloads
 
-Push a commit containing one or more URLs – the workflow will download them
-immediately.  
+Push a commit containing one or more URLs – the workflow will download them immediately.  
 
-Add `[nocompress]` anywhere in the commit message to skip compression for **all**
-URLs in that commit.
+Add `[nocompress]` anywhere in the commit message to skip compression for **all** URLs in that commit.
 
 ```
 git commit -m "https://example.com/tool.zip [nocompress]"
@@ -148,8 +146,7 @@ Or use a tool like `7z`:
 
 - **GitHub releases** – the script remembers the tag of the last mirrored release.  
   If the tag hasn’t changed, the whole release is **skipped**.  
-- **Direct downloads** – once a direct URL has been downloaded, it’s recorded in
-  `state.json`. The same URL will never be downloaded again.
+- **Direct downloads** – once a direct URL has been downloaded, it’s recorded in `state.json`. The same URL will never be downloaded again.
 
 This keeps your repository small and the runs fast.
 
@@ -159,17 +156,13 @@ This keeps your repository small and the runs fast.
 
 The following extensions are **always ignored**, even with `[all]`:
 
-`.sha256`, `.sha256sum`, `.sha512`, `.sha512sum`, `.sha1`, `.sha1sum`, `.md5`,
-`.md5sum`, `.asc`, `.sig`, `.sign`, `.pgp`, `.blake2b`, `.blake2s`, `.sha3`,
-and various `.txt`/`.sums` variants.
+`.sha256`, `.sha256sum`, `.sha512`, `.sha512sum`, `.sha1`, `.sha1sum`, `.md5`, `.md5sum`, `.asc`, `.sig`, `.sign`, `.pgp`, `.blake2b`, `.blake2s`, `.sha3`, and various `.txt`/`.sums` variants.
 
 ---
 
 ## Extension‑less files
 
-If a downloaded file has no extension (e.g. an executable named `zyrln-linux-amd64`),
-the script uses `file --mime-type` and Python’s `mimetypes` module to guess the
-correct extension and renames the file.
+If a downloaded file has no extension (e.g. an executable named `zyrln-linux-amd64`), the script uses `file --mime-type` and Python’s `mimetypes` module to guess the correct extension and renames the file.
 
 - `video/mp4` → `*.mp4`  
 - `application/x-dosexec` → `*.exe`  
@@ -183,8 +176,8 @@ If the type cannot be determined, the file is **kept as‑is** (no renaming, no 
 Inside each folder’s `README.md` (and therefore in `INDEX.md`), you’ll see:
 
 - **CRC32** checksum for every final file.  
-- **Compression percentage** (e.g. `-12.3%`) showing the space saved compared to the
-  original release asset.
+- **Compression percentage** (e.g. `-12.3%`) showing the space saved compared to the original release asset (only for files that were actually compressed).  
+- Already‑compressed archives (`.zip`/`.7z`) will not show a percentage because they are stored as‑is.
 
 ---
 
@@ -211,8 +204,8 @@ If the file is missing, defaults are used.
 - Use **glob filters** to catch version‑independent installers (e.g. `app_*_setup.exe`).  
 - Use **`[nocompress]`** for rule sets / config files that are updated frequently.  
 - The workflow runs every **12 hours** – no need to poll manually.  
-- If a push fails because of a 100 MB limit, check the logs – the split guarantee should
-  have kicked in; if not, temporarily increase `SPLIT_MB` to 95.
+- If a push fails because of a 100 MB limit, check the logs – the split guarantee should have kicked in; if not, temporarily increase `SPLIT_MB` to 95.  
+- `.zip` and `.7z` files are never re‑compressed; they are only split if they exceed the size limit.
 
 ---
 
@@ -220,22 +213,22 @@ If the file is missing, defaults are used.
 
 ```
 # VPN apps
-therealaleph/MasterHttpRelayVPN-RUST [all]
-ajavadinezhad/zyrln [all, nocompress]
+therealaleph/MasterHttpRelayVPN-RUST [all, pre]
+ajavadinezhad/zyrln [all, pre]
 
 # Tools
-2dust/v2rayN [v2rayN-linux-64.zip, v2rayN-windows-64.zip, pre]
+2dust/v2rayN [v2rayN-linux-64.zip, pre]
 2dust/v2rayNG [v2rayNG_*_universal.apk, pre]
 
 # Windows
-imputnet/helium-windows [helium_*_x64-installer.exe]
+imputnet/helium-windows [helium_*_x64-installer.exe, pre]
 
 # Android
-MetaCubeX/ClashMetaForAndroid [cmfa-*-meta-universal-release.apk]
+MetaCubeX/ClashMetaForAndroid [cmfa-*-meta-universal-release.apk, pre]
 
 # Rules (raw, no compression)
 Chocolate4U/Iran-v2ray-rules [all, nocompress, pre]
 
 # Direct download
-https://example.com/files/tool.zip [nocompress]
+https://example.com/files/tool.bin
 ```
