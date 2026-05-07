@@ -4,7 +4,7 @@
 split_mb = 99                          # file‑size threshold for splitting (MiB)
 push_batch_bytes = 367001600           # maximum bytes per git push (350 MiB)
 max_parallel = 4                       # simultaneous asset downloads
-compression_level = 3.                 # Deflate64 effort (1‑fastest, 9‑best)
+compression_level = 3                  # Deflate64 effort (1‑fastest, 9‑best)
 compression_method = "Deflate64"       # 7z method (Deflate64, LZMA2, etc.)
 
 extract_archive_exts = [               # archive formats that are extracted before repacking
