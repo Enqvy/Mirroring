@@ -1,9 +1,5 @@
 {
   "repos": {
-    "therealaleph/MasterHttpRelayVPN-RUST": {
-      "folder": "repos/v1.9.17_v1.9.17",
-      "tag": "v1.9.17"
-    },
     "ajavadinezhad/zyrln": {
       "folder": "repos/Zyrln v1.5.1-pre1_v1.5.1-pre1",
       "tag": "v1.5.1-pre1"
@@ -23,6 +19,10 @@
     "Chocolate4U/Iran-v2ray-rules": {
       "folder": "repos/202604280714_202604280714",
       "tag": "202604280714"
+    },
+    "ThisIsDara/mhr-cfw-go": {
+      "folder": "repos/v1.2.0_v1.2.0",
+      "tag": "v1.2.0"
     }
   },
   "downloads": {},

@@ -1,0 +1,23 @@
+{
+  "url": "https://github.com/ThisIsDara/mhr-cfw-go/releases/download/v1.2.0/mhr-cfw-go-windows.exe",
+  "method": "github_release",
+  "repo": "ThisIsDara/mhr-cfw-go",
+  "tag": "v1.2.0",
+  "assets": [
+    {
+      "name": "mhr-cfw-go-linux",
+      "size": 6795524
+    },
+    {
+      "name": "mhr-cfw-go-windows.exe",
+      "size": 6948864
+    }
+  ],
+  "crc32": {
+    "mhr-cfw-go-windows.zip": "26596f90",
+    "mhr-cfw-go-linux.zip": "9e9c5780"
+  },
+  "total_size": 6134885,
+  "release_date": "2026-05-06T19:52:03Z",
+  "use_lfs": false
+}
