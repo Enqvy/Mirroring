@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 """
-Mirror Manager — production‑ready release
+Mirror Manager – production release.
 
 Fetches the latest GitHub releases (or direct URLs), compresses them,
 and pushes to your repository.
 
-Key features
+Key features:
 - Reads repo.txt for sources; supports inline flags [nocompress], [pre], [lfs].
-- Incremental: skips releases when the tag hasn’t changed and direct downloads when they’ve already been mirrored.
+- Incremental: skips releases when the tag hasn't changed and direct downloads
+  when they’ve already been mirrored.
 - Compresses everything into .7z containers (Deflate64 by default, configurable).
 - Files larger than 99 MB are automatically split into store‑mode volumes.
 - Per‑file CRC32 checksums are shown in the file list (not in the top‑level properties).
 - All tunable parameters live in config.toml, next to this script.
 
-Usage
-- python3 scripts/download_manager.py update [--no-push]
-- python3 scripts/download_manager.py commit [--msg MSG] [--no-push]
+Usage:
+  python3 scripts/download_manager.py update [--no-push]
+  python3 scripts/download_manager.py commit [--msg MSG] [--no-push]
 """
 
 import os, sys, json, re, time, shutil, subprocess, argparse, tempfile, zipfile
@@ -803,7 +804,6 @@ def process_updates(no_push=False):
             try:
                 folder = download_and_chunk(repo, "downloads", no_compress=no_compress, use_lfs=use_lfs)
                 if folder:
-                    state["downloads"][repo] = {"folder": folder}
                     new_folders.append(folder)
             except Exception as e:
                 log(f"❌ {e}", "ERROR")
@@ -832,7 +832,8 @@ def process_updates(no_push=False):
         except Exception as e:
             log(f"❌ {e}", "ERROR")
 
-    save_state(state)
+    # Reload state to pick up changes made by individual release functions
+    state = load_state()
     update_index_md(state)
     new_folders.extend(["state.json", "INDEX.md"])
     if not no_push:
