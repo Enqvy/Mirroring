@@ -1,5 +1,5 @@
 # VPN apps
-therealaleph/MasterHttpRelayVPN-RUST [all,pre]
+ThisIsDara/mhr-cfw-go [all,pre]
 ajavadinezhad/zyrln [all,pre]
 
 # v2rayN - Windows & Linux (64-bit)
