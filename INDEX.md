@@ -7,7 +7,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/ajavadinezhad/zyrln/releases/download/v1.4.0/zyrln-windows-amd64.exe |
-| **Downloaded** | 2026-05-07 17:04 UTC |
+| **Downloaded** | 2026-05-07 17:07 UTC |
 | **Source** | GitHub Release |
 | **Release** | v1.4.0 — Connection Optimizations |
 | **Tag** | v1.4.0 |
