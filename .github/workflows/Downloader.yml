@@ -40,9 +40,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
       - name: Install dependencies
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq aria2 p7zip-full
+          # Restore cached apt packages so they aren't re‑downloaded
+          if [ -d /var/cache/apt/archives ]; then
+            sudo mv /var/cache/apt/archives /var/cache/apt/archives_backup
+            sudo mkdir -p /var/cache/apt/archives
+            sudo apt-get update -qq
+            sudo mv /var/cache/apt/archives_backup/* /var/cache/apt/archives/ 2>/dev/null || true
+            sudo rm -rf /var/cache/apt/archives_backup
+          else
+            sudo apt-get update -qq
+          fi
+          sudo apt-get install -y -qq aria2 p7zip-full
           pip install --quiet requests psutil tqdm
 
       - name: Update repos from repo.txt
