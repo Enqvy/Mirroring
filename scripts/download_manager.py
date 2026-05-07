@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-Mirror Manager
+Mirror Manager – production release (ZIP backend).
 
-Fetches the latest GitHub releases (or direct URLs), compresses them,
+Fetches the latest GitHub releases (or direct URLs), compresses them
+into .zip containers (Deflate, level 9 by default, configurable),
 and pushes to your repository.
 
 Key features:
 - Reads repo.txt for sources; supports inline flags [nocompress], [pre], [lfs].
 - Incremental: skips releases when the tag hasn't changed and direct downloads
   when they’ve already been mirrored.
-- Compresses everything into .7z containers (Deflate64 by default, configurable).
-- Files larger than 99 MB are automatically split into store‑mode volumes.
-- Per‑file CRC32 checksums are shown in the file list (not in the top‑level properties).
+- Compresses everything into .zip containers (Deflate, level 9).
+- Files larger than 99 MB are automatically split using zip's multi‑volume feature.
+- Per‑file CRC32 checksums are shown in the file list, alongside the compression
+  percentage (e.g., -12.3%).
 - All tunable parameters live in config.toml, next to this script.
 
 Usage:
@@ -44,8 +46,8 @@ _DEFAULTS = {
     "split_mb": 99,
     "push_batch_bytes": 350 * 1024 * 1024,  # 350 MiB
     "max_parallel": 4,
-    "compression_level": 5,
-    "compression_method": "Deflate64",
+    "compression_level": 9,                  # 0 = store, 1‑9 = deflate effort
+    "compression_method": "Deflate",         # kept for compatibility, ignored
     "extract_archive_exts": [".zip", ".jar", ".war", ".ear"],
     "skip_asset_exts": [
         ".sha256", ".sha256sum", ".sha512", ".sha512sum",
@@ -81,7 +83,7 @@ SPLIT_MB            = CFG["split_mb"]
 PUSH_BATCH_BYTES    = CFG["push_batch_bytes"]
 MAX_PARALLEL        = CFG["max_parallel"]
 COMPRESSION_LEVEL   = CFG["compression_level"]
-COMPRESSION_METHOD  = CFG["compression_method"]
+COMPRESSION_METHOD  = CFG["compression_method"]  # unused, kept for compatibility
 EXTRACT_ARCHIVE_EXTS = set(CFG["extract_archive_exts"])
 SKIP_ASSET_EXTS     = set(CFG["skip_asset_exts"])
 
@@ -204,7 +206,7 @@ def write_metadata(folder, url, method, **extra):
     with open(path, "w") as f:
         json.dump({"url": url, "method": method, **extra}, f, indent=2)
 
-def write_readme(folder, title, url, method, extra=None, hashes=None):
+def write_readme(folder, title, url, method, extra=None, hashes=None, savings=None):
     lines = [f"# {title}", "", "| Property | Value |", "|--- |---|",
              f"| **URL** | {url} |"]
     if extra:
@@ -216,9 +218,14 @@ def write_readme(folder, title, url, method, extra=None, hashes=None):
         rel = f"{folder}/{f.name}"
         sz = human_size(f.stat().st_size)
         name = unquote(f.name)
-        h = f" `(CRC32: {hashes[f.name]})`" if hashes and f.name in hashes else ""
+        crc_str = ""
+        if hashes and f.name in hashes:
+            crc_str = f" `(CRC32: {hashes[f.name]})`"
+        save_str = ""
+        if savings and f.name in savings:
+            save_str = f" ({savings[f.name]})"
         lines.append(
-            f"- [`{name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({sz}){h}"
+            f"- [`{name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({sz}){crc_str}{save_str}"
         )
     lines += ["", "</details>"]
     Path(os.path.join(folder, "README.md")).write_text("\n".join(lines))
@@ -239,7 +246,7 @@ def update_index_md(state):
     log("📄 INDEX.md regenerated")
 
 # ------------------------------------------------------------------------------
-# Filter parsing
+# Filter parsing – dot means filename, no dot means extension, * = glob
 # ------------------------------------------------------------------------------
 def parse_filter(line):
     """Return (repo, filters, no_compress, pre_release, use_lfs)."""
@@ -260,10 +267,15 @@ def parse_filter(line):
         return repo, None, no_compress, pre_release, use_lfs
     if 'all' in [r.lower() for r in real]:
         return repo, ["all"], no_compress, pre_release, use_lfs
+
     processed = []
     for r in real:
-        if '*' in r or '?' in r: processed.append(r)
-        else: processed.append(f'.{r.lstrip(".")}')
+        if '*' in r or '?' in r:
+            processed.append(r)                    # glob
+        elif '.' in r:
+            processed.append(r)                    # exact filename
+        else:
+            processed.append(f'.{r.lstrip(".")}')  # extension
     return repo, processed, no_compress, pre_release, use_lfs
 
 def asset_matches(name, filters):
@@ -272,7 +284,8 @@ def asset_matches(name, filters):
     for f in filters:
         if f.startswith('.'):
             if nl.endswith(f.lower()): return True
-        elif fnmatch.fnmatch(nl, f.lower()): return True
+        else:
+            if fnmatch.fnmatch(nl, f.lower()): return True
     return False
 
 def is_skip_asset(name):
@@ -285,40 +298,56 @@ def detect_no_compress(msg):
     return bool(NOCOMPRESS_COMMIT.search(msg))
 
 # ------------------------------------------------------------------------------
-# 7z helpers
+# Zip helpers (replaces 7z)
 # ------------------------------------------------------------------------------
-def _7z_available():
-    try:
-        subprocess.run(["7z"], capture_output=True, timeout=5)
-        return True
-    except Exception:
-        raise RuntimeError("7z is not installed – install p7zip-full")
+def _zip_available():
+    if shutil.which("zip") is None:
+        raise RuntimeError("zip is not installed – install zip")
 
-def _7z_cmd_base(level, split=False):
-    cmd = ['7z', 'a', '-t7z']
-    if split:
-        cmd.append(f'-v{SPLIT_MB}m')
+def _zip_cmd(filepath, out_zip, split=False):
+    level = COMPRESSION_LEVEL
+    cmd = ["zip", "-r"]
     if level == 0:
-        cmd.extend(['-mx=0', '-m0=Copy'])
+        cmd.append("-0")                     # store
     else:
-        cmd.extend([f'-m0={COMPRESSION_METHOD}', f'-mx={level}', '-mmt=on'])
+        cmd.append(f"-{level}")              # deflate 1‑9
+    if split:
+        cmd.append(f"-s {SPLIT_MB}m")
+    cmd.append(f'"{out_zip}"')
+    cmd.append(f'"{filepath}"')
     return cmd
 
-def _archive_single(filepath, out_7z, level=COMPRESSION_LEVEL):
-    run(' '.join(_7z_cmd_base(level) + [f'"{out_7z}"', f'"{filepath}"']), shell=True)
+def _archive_single(filepath, out_zip):
+    """Compress a single file into a .zip archive."""
+    cmd = _zip_cmd(filepath, out_zip, split=False)
+    run(" ".join(cmd), shell=True)
 
-def _archive_dir(tmpdir, out_7z, level=COMPRESSION_LEVEL):
-    run(' '.join(_7z_cmd_base(level) + [f'"{out_7z}"', f'"{tmpdir}/*"']), shell=True)
+def _archive_dir(tmpdir, out_zip):
+    """Compress a directory contents into a .zip archive."""
+    cmd = _zip_cmd(tmpdir, out_zip, split=False)
+    run(" ".join(cmd), shell=True)
 
-def _store_archive(filepath, out_7z):
-    _archive_single(filepath, out_7z, level=0)
+def _store_archive(filepath, out_zip):
+    """Create a .zip container with NO compression (store) for a non‑archive file."""
+    saved_level = COMPRESSION_LEVEL
+    global COMPRESSION_LEVEL
+    COMPRESSION_LEVEL = 0
+    try:
+        _archive_single(filepath, out_zip)
+    finally:
+        COMPRESSION_LEVEL = saved_level
 
 def _split_store(filepath):
+    """Split a single file into zip volumes (store mode). Removes the original.
+    If the file already ends with .zip, output base is adjusted.
+    """
     base = os.path.splitext(filepath)[0]
-    if filepath.lower().endswith('.7z'):
-        base = filepath[:-len('.7z')] + '_split'
-    out = base + ".7z"
-    run(' '.join(['7z', 'a', '-t7z', f'-v{SPLIT_MB}m', '-mx=0', f'"{out}"', f'"{filepath}"']), shell=True)
+    if filepath.lower().endswith('.zip'):
+        base = filepath[:-len('.zip')] + '_split'
+    out_zip = base + ".zip"
+    cmd = ["zip", "-r", "-0", f"-s {SPLIT_MB}m", f'"{out_zip}"', f'"{filepath}"']
+    log(f"✂️  Splitting {os.path.basename(filepath)} into {SPLIT_MB} MB volumes")
+    run(" ".join(cmd), shell=True)
     if os.path.exists(filepath):
         os.remove(filepath)
     if os.path.exists(filepath):
@@ -334,15 +363,17 @@ def archive_file(filepath, folder, no_compress=False):
     log(f"🗜️  {fp.name} ({human_size(orig)})" + (" (nocompress)" if no_compress else ""))
     check_disk_space(folder, orig * 2)
 
+    # --------------- NOCOMPRESS: keep raw if small, split if large ---------------
     if no_compress:
         if orig <= SPLIT_MB * 1024 * 1024:
             log(f"📄 Keeping raw (≤ {SPLIT_MB} MB)")
             return filepath
         log("📦 Large file → store‑mode split")
         _split_store(filepath)
-        return os.path.splitext(filepath)[0] + ".7z"
+        return os.path.splitext(filepath)[0] + ".zip"
 
-    out_7z = os.path.join(folder, fp.stem + ".7z")
+    # --------------- NORMAL PATH (compression) ---------------
+    out_zip = os.path.join(folder, fp.stem + ".zip")
     tmp_extract = None
     compressed_ok = False
 
@@ -356,10 +387,10 @@ def archive_file(filepath, folder, no_compress=False):
                     if not mp.startswith(os.path.realpath(tmp_extract)):
                         raise RuntimeError(f"Path traversal: {m}")
                 zf.extractall(tmp_extract)
-            _archive_dir(tmp_extract, out_7z)
+            _archive_dir(tmp_extract, out_zip)
         else:
-            _archive_single(filepath, out_7z)
-        new_size = os.path.getsize(out_7z)
+            _archive_single(filepath, out_zip)
+        new_size = os.path.getsize(out_zip)
         compressed_ok = True
     except Exception as e:
         log(f"Compression failed: {e}, fallback to store", "WARN")
@@ -370,18 +401,34 @@ def archive_file(filepath, folder, no_compress=False):
     if compressed_ok and new_size < orig:
         log(f"✅ Compressed: {human_size(new_size)} (saved {human_size(orig - new_size)})")
         os.remove(filepath)
-        final = out_7z
+        final = out_zip
     else:
         if compressed_ok:
-            log("⚠️  No space saved → store")
-            os.remove(out_7z)
+            log("⚠️  No space saved → using original")
+            if os.path.exists(out_zip):
+                os.remove(out_zip)
         else:
-            log("📦 Store inside .7z")
-        _store_archive(filepath, out_7z)
-        os.remove(filepath)
-        final = out_7z
-        log(f"📦 Store size: {human_size(os.path.getsize(final))}")
+            # compression failed – fall back to store for non‑archives,
+            # for archives just keep the original file unchanged
+            if ext not in EXTRACT_ARCHIVE_EXTS:
+                log("📦 Store inside .zip")
+                _store_archive(filepath, out_zip)
+                os.remove(filepath)
+                final = out_zip
+            else:
+                log("📄 Keeping original archive unchanged")
+        # if not already set (meaning we kept original), set final to original
+        if not compressed_ok:
+            final = filepath
+        # else case where compressed but no space saved: we kept original file path
+        else:
+            final = filepath
 
+        # Ensure we log store size if we created it
+        if final == out_zip:
+            log(f"📦 Store size: {human_size(os.path.getsize(final))}")
+
+    # ---- GUARANTEE: no file > SPLIT_MB leaves this function ----
     limit = SPLIT_MB * 1024 * 1024
     while os.path.exists(final) and os.path.getsize(final) > limit:
         log(f"🔁 Splitting {os.path.basename(final)} ({human_size(os.path.getsize(final))})")
@@ -391,8 +438,10 @@ def archive_file(filepath, folder, no_compress=False):
             _split_store(final)
             if os.path.exists(final):
                 raise RuntimeError("Cannot split file after multiple attempts")
+
     if not os.path.exists(final):
-        return os.path.splitext(final)[0] + ".7z"
+        # split volumes were created; return base name for volume set
+        return os.path.splitext(filepath)[0] + ".zip"
     return final
 
 def ensure_all_files_small(folder):
@@ -442,6 +491,45 @@ def github_api(url):
     return resp.json()
 
 # ------------------------------------------------------------------------------
+# Helper: compute per‑file compression savings
+# ------------------------------------------------------------------------------
+def _compute_savings(folder, wanted):
+    savings = {}
+    for name, _, orig_size in wanted:
+        stem = Path(name).stem
+        # look for single .zip
+        single = Path(folder) / (stem + ".zip")
+        if single.exists():
+            compressed = single.stat().st_size
+        else:
+            # look for split volumes
+            pattern = f"{stem}_split.zip*"
+            parts = list(Path(folder).glob(pattern))
+            if not parts:
+                # also try .z01 etc. which might appear with `-s`
+                pattern = f"{stem}.z*"
+                parts = list(Path(folder).glob(pattern))
+            if parts:
+                compressed = sum(p.stat().st_size for p in parts)
+            else:
+                raw = Path(folder) / name
+                if raw.exists():
+                    compressed = raw.stat().st_size
+                else:
+                    continue
+        if orig_size > 0 and compressed > 0:
+            pct = (compressed / orig_size - 1) * 100
+            label = f"{pct:.1f}%"
+            if single.exists():
+                savings[single.name] = label
+            elif parts:
+                first = sorted(parts)[0]
+                savings[first.name] = label
+            else:
+                savings[Path(name).name] = label
+    return savings
+
+# ------------------------------------------------------------------------------
 # Download helpers
 # ------------------------------------------------------------------------------
 def download_asset(url, dest):
@@ -465,7 +553,6 @@ def download_file(url, dest_dir):
     return download_asset(url, dest_dir)
 
 def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
-    # Check if we already processed this exact URL (direct downloads)
     state = load_state()
     if url in state.get("downloads", {}):
         folder = state["downloads"][url].get("folder")
@@ -482,6 +569,7 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
     path = download_file(url, str(folder))
     if not path:
         return None
+    orig_size = os.path.getsize(path)
 
     if use_lfs:
         log("🗃️  LFS mode – keeping raw")
@@ -491,8 +579,18 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
 
     final_files = [f for f in folder.iterdir() if f.is_file() and f.name not in ("README.md", "metadata.json")]
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
+
+    # Per‑file compression savings
+    total_compressed = sum(os.path.getsize(str(f)) for f in final_files)
+    savings = {}
+    if orig_size > 0 and total_compressed > 0:
+        pct = (total_compressed / orig_size - 1) * 100
+        label = f"{pct:.1f}%"
+        if final_files:
+            savings[final_files[0].name] = label
+
     write_metadata(str(folder), url, "direct", crc32=crc_info)
-    write_readme(str(folder), base_name, url, "Direct Download", hashes=crc_info)
+    write_readme(str(folder), base_name, url, "Direct Download", hashes=crc_info, savings=savings)
     if use_lfs:
         process_lfs_assets(str(folder))
 
@@ -522,14 +620,14 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
 
     state = load_state()
 
-    # Incremental skip if tag unchanged
+    # Incremental skip
     if repo in state.get("repos", {}) and state["repos"][repo].get("tag") == tag:
         prev_folder = state["repos"][repo].get("folder")
         if prev_folder and os.path.exists(prev_folder):
             log(f"✅ Release {tag} already mirrored, skipping.")
             return prev_folder, repo, tag
 
-    # Clean up old release folder
+    # Clean up old
     if repo in state.get("repos", {}):
         old_folder = state["repos"][repo].get("folder")
         if old_folder:
@@ -564,10 +662,8 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
 
     if not wanted:
         log("⚠️  No matching assets found.")
-        # Remember the tag so we skip next time
         state["repos"][repo] = {"folder": str(folder), "tag": tag}
         save_state(state)
-        # Remove the empty folder immediately so it never gets committed
         if folder.exists():
             shutil.rmtree(str(folder), ignore_errors=True)
         return str(folder), repo, tag
@@ -598,6 +694,9 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
     total_size = sum(os.path.getsize(str(f)) for f in final_files)
 
+    # Per‑file compression savings
+    savings = _compute_savings(str(folder), wanted)
+
     rel_date = release.get("published_at") or release.get("created_at")
     if rel_date:
         try:
@@ -624,7 +723,7 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
                    assets=[{"name": n, "size": s} for n, _, s in wanted],
                    crc32=crc_info, total_size=total_size, release_date=rel_date, use_lfs=use_lfs)
     write_readme(str(folder), repo, f"https://github.com/{repo}/releases/tag/{tag}",
-                 "GitHub Release", extra=extra, hashes=crc_info)
+                 "GitHub Release", extra=extra, hashes=crc_info, savings=savings)
 
     state["repos"][repo] = {"folder": str(folder), "tag": tag}
     save_state(state)
@@ -660,6 +759,7 @@ def range_download(url, start, end, base_dir):
 
     final_files = [f for f in folder.iterdir() if f.is_file() and f.name not in ("README.md", "metadata.json")]
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
+
     write_metadata(str(folder), url, "direct_chunked", crc32=crc_info)
     title = folder.name.rsplit('_', 1)[0]
     readme = (
@@ -667,7 +767,7 @@ def range_download(url, start, end, base_dir):
         f"| Property | Value |\n|--- |---|\n"
         f"| **URL** | {url} |\n"
         f"| **Range** | {start}-{end} bytes |\n"
-        f"| **Compression** | {COMPRESSION_METHOD} (level {COMPRESSION_LEVEL}) |\n\n"
+        f"| **Compression** | Deflate (level {COMPRESSION_LEVEL}) |\n\n"
         "<details><summary>Files</summary>\n\n"
     )
     for f in sorted(folder.iterdir()):
@@ -676,9 +776,7 @@ def range_download(url, start, end, base_dir):
         sz = human_size(f.stat().st_size)
         name = unquote(f.name)
         h = f" `(CRC32: {crc_info[f.name]})`" if crc_info and f.name in crc_info else ""
-        readme += (
-            f"- [`{name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({sz}){h}\n"
-        )
+        readme += f"- [`{name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({sz}){h}\n"
     readme += "\n</details>\n"
     (folder / "README.md").write_text(readme)
 
@@ -781,9 +879,9 @@ def _normalize_line(line):
     return parse_filter(line)
 
 def process_updates(no_push=False):
-    _7z_available()
+    _zip_available()
     log("🔄 Repo.txt update", "INFO")
-    log(f"Compression: {COMPRESSION_METHOD} level {COMPRESSION_LEVEL}")
+    log(f"Compression: Deflate level {COMPRESSION_LEVEL}")
 
     state = load_state()
     if clean_state(state): save_state(state)
@@ -834,10 +932,7 @@ def process_updates(no_push=False):
         except Exception as e:
             log(f"❌ {e}", "ERROR")
 
-    # ---------- CRITICAL FIX ----------
-    # Reload the state from disk so we see all repo updates saved by each github_release call
     state = load_state()
-    # ------------------------------------
     update_index_md(state)
     new_folders.extend(["state.json", "INDEX.md"])
     if not no_push:
@@ -845,7 +940,7 @@ def process_updates(no_push=False):
     log("✅ Update finished")
 
 def process_commit(custom_msg=None, no_push=False):
-    _7z_available()
+    _zip_available()
     msg = custom_msg or run("git log -1 --pretty=%B", shell=True)
     log(f"📩 Commit: {msg}")
 
