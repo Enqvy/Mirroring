@@ -1,3 +1,7 @@
+# Downloads
+
+---
+
 # v1.4.0 — Connection Optimizations
 
 | Property | Value |
@@ -16,3 +20,5 @@
 - [`zyrln-windows-amd64.7z`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.4.0%20%E2%80%94%20Connection%20Optimizations_v1.4.0%2Fzyrln-windows-amd64.7z) (5.0 MB)
 
 </details>
+
+---
