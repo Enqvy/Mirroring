@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 """
-Mirror manager – fast Deflate64, incremental, parallel, CRC32 integrity, progress bars.
-Every file ends up inside a .7z container (split at 99 MB if needed).
-Use [nocompress] in repo.txt or commit message to skip compression.
-- Files ≤99 MB stay raw (no wrapping)
-- Larger files are split into store‑mode .7z volumes
-Files without a recognised extension are renamed using MIME type detection;
-if the format can't be determined, they are kept as-is.
-Skips checksum/signature files automatically.
+Mirror manager – fast compression, incremental updates, parallel downloads, CRC32 integrity.
+All behaviour is configured through config.toml (next to this script).
+Reads repo.txt for sources. Generates per‑release README.md and a global INDEX.md.
 """
 
 import os
@@ -33,29 +28,79 @@ import requests
 from tqdm import tqdm
 
 # ------------------------------------------------------------------------------
-# Configuration
+# TOML support (fallback to defaults if library missing)
 # ------------------------------------------------------------------------------
-SPLIT_MB = 99
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import tomli as tomllib
+    except ImportError:
+        tomllib = None
+
+# ------------------------------------------------------------------------------
+# Default configuration (mirrors config.toml)
+# ------------------------------------------------------------------------------
+DEFAULTS = {
+    "split_mb": 99,
+    "push_batch_bytes": 350 * 1024 * 1024,  # 350 MiB
+    "max_parallel": 4,
+    "compression_level": 5,
+    "compression_method": "Deflate64",
+    "extract_archive_exts": [".zip", ".jar", ".war", ".ear"],
+    "skip_asset_exts": [
+        ".sha256", ".sha256sum", ".sha512", ".sha512sum",
+        ".sha1", ".sha1sum", ".md5", ".md5sum",
+        ".asc", ".sig", ".sign", ".pgp",
+        ".blake2b", ".blake2s", ".sha3",
+        ".sha256.txt", ".sha512.txt", ".sha1.txt", ".md5.txt",
+        ".sha256sums", ".sha512sums", ".sha1sums", ".md5sums",
+    ],
+}
+
+# ------------------------------------------------------------------------------
+# Load config.toml
+# ------------------------------------------------------------------------------
+def load_config():
+    config = DEFAULTS.copy()
+    script_dir = Path(__file__).resolve().parent
+    config_file = script_dir / "config.toml"
+
+    if config_file.is_file():
+        if tomllib is None:
+            print("⚠️  TOML library missing – using hard‑coded defaults.")
+        else:
+            try:
+                with open(config_file, "rb") as f:
+                    user = tomllib.load(f)
+                for key in DEFAULTS:
+                    if key in user:
+                        config[key] = user[key]
+            except Exception as e:
+                print(f"⚠️  Failed to parse config.toml: {e}")
+    return config
+
+CFG = load_config()
+
+# ------------------------------------------------------------------------------
+# Application constants (from config)
+# ------------------------------------------------------------------------------
+SPLIT_MB            = CFG["split_mb"]
+PUSH_BATCH_BYTES    = CFG["push_batch_bytes"]
+MAX_PARALLEL        = CFG["max_parallel"]
+COMPRESSION_LEVEL   = CFG["compression_level"]
+COMPRESSION_METHOD  = CFG["compression_method"]
+EXTRACT_ARCHIVE_EXTS = set(CFG["extract_archive_exts"])
+SKIP_ASSET_EXTS     = set(CFG["skip_asset_exts"])
+
+# ------------------------------------------------------------------------------
+# Other constants
+# ------------------------------------------------------------------------------
 STATE_FILE = "state.json"
 GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY", "unknown/unknown")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 VERBOSE = os.getenv("VERBOSE", "0") == "1"
-PUSH_BATCH_BYTES = 350 * 1024 * 1024
-MAX_PARALLEL = 4          # concurrent downloads per release
-
-# Archives we extract for better recompression (APK is NOT extracted)
-EXTRACT_ARCHIVE_EXTS = {'.zip', '.jar', '.war', '.ear'}
-
-# File extensions to ALWAYS skip (checksums, signatures, etc.)
-SKIP_ASSET_EXTS = {
-    '.sha256', '.sha256sum', '.sha512', '.sha512sum',
-    '.sha1', '.sha1sum', '.md5', '.md5sum',
-    '.asc', '.sig', '.sign', '.pgp',
-    '.blake2b', '.blake2s', '.sha3',
-    '.sha256.txt', '.sha512.txt', '.sha1.txt', '.md5.txt',
-    '.sha256sums', '.sha512sums', '.sha1sums', '.md5sums',
-}
 
 # ------------------------------------------------------------------------------
 # Regex patterns
@@ -124,8 +169,8 @@ def url_encode(s):
 
 def crc32_file(path):
     """Fast CRC32 checksum of a file."""
+    prev = 0
     with open(path, 'rb') as f:
-        prev = 0
         while True:
             chunk = f.read(65536)
             if not chunk:
@@ -137,7 +182,6 @@ def crc32_file(path):
 # File extension fixing (MIME detection)
 # ------------------------------------------------------------------------------
 def get_mime_type(filepath):
-    """Return MIME type using 'file' command, or None."""
     try:
         out = run(f'file -b --mime-type "{filepath}"', shell=True, quiet=True)
         return out.strip()
@@ -145,12 +189,6 @@ def get_mime_type(filepath):
         return None
 
 def fix_extension(filepath):
-    """
-    If the file has no extension, try to detect its type using 'file' and
-    Python's mimetypes module and rename accordingly.
-    If the type cannot be determined, the file is kept as-is.
-    Returns the (possibly new) filepath.
-    """
     fpath = Path(filepath)
     if fpath.suffix:
         return filepath
@@ -191,8 +229,8 @@ def write_metadata(folder, url, method, **extra):
         json.dump({"url": url, "method": method, **extra}, f, indent=2)
     log(f"📝 metadata → {path}")
 
-def write_readme(folder, title, url, method, extra=None):
-    """Write per‑folder README with enhanced extra info."""
+def write_readme(folder, title, url, method, extra=None, hashes=None):
+    """Write per‑folder README with per‑file CRC32 hashes next to sizes."""
     lines = [
         f"# {title}", "",
         "| Property | Value |",
@@ -208,8 +246,11 @@ def write_readme(folder, title, url, method, extra=None):
         rel = f"{folder}/{f.name}"
         size = human_size(f.stat().st_size)
         display_name = unquote(f.name)
+        crc_str = ""
+        if hashes and f.name in hashes:
+            crc_str = f" `(CRC32: {hashes[f.name]})`"
         lines.append(
-            f"- [`{display_name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({size})"
+            f"- [`{display_name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({size}){crc_str}"
         )
     lines += ["", "</details>"]
     readme_path = os.path.join(folder, "README.md")
@@ -282,7 +323,6 @@ def asset_matches(asset_name, filters):
     return False
 
 def is_skip_asset(name):
-    """Return True if the file is a checksum / signature that should always be skipped."""
     name_lower = name.lower()
     for ext in SKIP_ASSET_EXTS:
         if name_lower.endswith(ext):
@@ -290,11 +330,10 @@ def is_skip_asset(name):
     return False
 
 def detect_no_compress(msg):
-    """Return True if [nocompress] appears anywhere in the commit message."""
     return bool(NOCOMPRESS_COMMIT.search(msg))
 
 # ------------------------------------------------------------------------------
-# 7z helpers – fast Deflate64 level 5
+# 7z helpers – using configurable method + level
 # ------------------------------------------------------------------------------
 def _7z_available():
     try:
@@ -304,21 +343,20 @@ def _7z_available():
         raise RuntimeError("7z is not installed – please install p7zip-full")
 
 def _7z_cmd_base(compression_level, split=False):
-    """Build a 7z command. Level 0 = store, others = Deflate64 with given effort level."""
     cmd = ['7z', 'a', '-t7z']
     if split:
         cmd.append(f'-v{SPLIT_MB}m')
     if compression_level == 0:
         cmd.extend(['-mx=0', '-m0=Copy'])
     else:
-        cmd.extend([f'-m0=Deflate64', f'-mx={compression_level}', '-mmt=on'])
+        cmd.extend([f'-m0={COMPRESSION_METHOD}', f'-mx={compression_level}', '-mmt=on'])
     return cmd
 
-def _archive_single(filepath, out_7z, level=5):
+def _archive_single(filepath, out_7z, level=COMPRESSION_LEVEL):
     cmd = _7z_cmd_base(level) + [f'"{out_7z}"', f'"{filepath}"']
     run(' '.join(cmd), shell=True)
 
-def _archive_dir(tmpdir, out_7z, level=5):
+def _archive_dir(tmpdir, out_7z, level=COMPRESSION_LEVEL):
     cmd = _7z_cmd_base(level) + [f'"{out_7z}"', f'"{tmpdir}/*"']
     run(' '.join(cmd), shell=True)
 
@@ -327,8 +365,7 @@ def _create_store_archive(filepath, out_7z):
     _archive_single(filepath, out_7z, level=0)
 
 def _split_store(filepath):
-    """Split a single file into 7z store‑mode volumes. Removes the original.
-    If the file already ends with .7z, output base is adjusted to avoid name clash."""
+    """Split a single file into 7z store‑mode volumes (no compression)."""
     base = os.path.splitext(filepath)[0]
     if filepath.lower().endswith('.7z'):
         base = filepath[:-len('.7z')] + '_split'
@@ -349,7 +386,7 @@ def _split_store(filepath):
         raise RuntimeError(f"Failed to delete original after split: {filepath}")
 
 # ------------------------------------------------------------------------------
-# Smart archiving – APK stays whole, ZIP/JAR/WAR/EAR extracted, nocompress flag
+# Smart archiving – APK stays whole, other archives extracted, nocompress support
 # ------------------------------------------------------------------------------
 def archive_file(filepath, folder, no_compress=False):
     fpath = Path(filepath)
@@ -384,9 +421,9 @@ def archive_file(filepath, folder, no_compress=False):
                     if not member_path.startswith(os.path.realpath(tmp_extract)):
                         raise RuntimeError(f"Path traversal detected: {member}")
                 zf.extractall(tmp_extract)
-            _archive_dir(tmp_extract, out_7z, level=5)
+            _archive_dir(tmp_extract, out_7z, level=COMPRESSION_LEVEL)
         else:
-            _archive_single(filepath, out_7z, level=5)
+            _archive_single(filepath, out_7z, level=COMPRESSION_LEVEL)
         new_size = os.path.getsize(out_7z)
         compressed_ok = True
     except Exception as e:
@@ -449,7 +486,6 @@ def github_api(url):
 # Download helpers – incremental + parallel
 # ------------------------------------------------------------------------------
 def download_asset(url, dest):
-    """Download a single asset, fix missing extensions, return local path."""
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
     fname = unquote(os.path.basename(url.split("?")[0]))
@@ -469,7 +505,6 @@ def download_asset(url, dest):
     return fix_extension(str(local_path))
 
 def download_file(url, dest_dir):
-    """Single direct URL download (fallback)."""
     return download_asset(url, dest_dir)
 
 def download_and_chunk(url, dest_base, no_compress=False):
@@ -486,11 +521,10 @@ def download_and_chunk(url, dest_base, no_compress=False):
 
     archive_file(path, str(folder), no_compress=no_compress)
     ensure_all_files_small(str(folder))
-    # CRC32 after archiving
     final_files = [f for f in folder.iterdir() if f.is_file() and f.name not in ("README.md", "metadata.json")]
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
     write_metadata(str(folder), url, "direct", crc32=crc_info)
-    write_readme(str(folder), basename, url, "Direct Download")
+    write_readme(str(folder), basename, url, "Direct Download", hashes=crc_info)
     return str(folder)
 
 def github_release(url, dest_dir, filters=None, no_compress=False):
@@ -518,7 +552,6 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
     folder.mkdir(parents=True)
     log(f"📁 {folder}")
 
-    # Build asset list from release API
     all_assets = release.get("assets", [])
     wanted_assets = []
     for a in all_assets:
@@ -614,7 +647,7 @@ def github_release(url, dest_dir, filters=None, no_compress=False):
                    release_date=rel_date)
     title = repo
     write_readme(str(folder), title, f"https://github.com/{repo}/releases/tag/{tag}",
-                 "GitHub Release", extra=extra)
+                 "GitHub Release", extra=extra, hashes=crc_info)
     return str(folder), repo, tag
 
 def range_download(url, start, end, base_dir):
@@ -659,7 +692,7 @@ def range_download(url, start, end, base_dir):
         f"| Property | Value |\n|--- |---|\n"
         f"| **URL** | {url} |\n"
         f"| **Range** | {start}-{end} bytes |\n"
-        f"| **Compression** | Deflate64 (fast) |\n\n"
+        f"| **Compression** | {COMPRESSION_METHOD} (level {COMPRESSION_LEVEL}) |\n\n"
         "<details><summary>Files</summary>\n\n"
     )
     for f in sorted(folder.iterdir()):
@@ -667,7 +700,10 @@ def range_download(url, start, end, base_dir):
         rel = f"{folder}/{f.name}"
         size = human_size(f.stat().st_size)
         display_name = unquote(f.name)
-        readme += f"- [`{display_name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({size})\n"
+        crc_str = ""
+        if crc_info and f.name in crc_info:
+            crc_str = f" `(CRC32: {crc_info[f.name]})`"
+        readme += f"- [`{display_name}`](https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}) ({size}){crc_str}\n"
     readme += "\n</details>\n"
     (folder / "README.md").write_text(readme)
     state["ranges"][url] = {"folder": str(folder), "last_range_end": end}
@@ -787,7 +823,7 @@ def _normalize_line(line):
 def process_updates(no_push=False):
     _7z_available()
     log("🔄 Starting repo.txt update", "INFO")
-    log("Compression: Deflate64 level 5 (fast), parallel downloads, incremental")
+    log(f"Compression: {COMPRESSION_METHOD} level {COMPRESSION_LEVEL}")
     state = load_state()
     if cleanup_missing_folders(state): save_state(state)
     if prune_old_state_entries(state): save_state(state)
@@ -849,7 +885,6 @@ def process_commit(custom_msg=None, no_push=False):
     if cleanup_missing_folders(state): save_state(state)
     if prune_old_state_entries(state): save_state(state)
 
-    # Check for global [nocompress] flag in the commit message
     no_compress = detect_no_compress(msg)
     if no_compress:
         log("🏷️  [nocompress] flag detected in commit – all files will be kept raw")
