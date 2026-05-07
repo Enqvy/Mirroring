@@ -1,268 +1,241 @@
-A complete reference for the **GitHub‑based download & archive manager**.
+Automated mirroring of GitHub releases and direct URLs.  
+Every asset is wrapped inside a **`.zip` container** (with optional compression) and
+split into ⩽ 99 MB volumes so they never exceed GitHub’s file size limit.
 
 ---
 
-## 1. What does this tool do?
+## ⚠️ Disclaimer
 
-- Monitors a list of GitHub repositories (or direct URLs).
-- Downloads the **latest** release assets that match your filters.
-- Wraps every asset in a `.7z` container (compressed or store‑only, depending on settings).
-- Splits files larger than **99 MB** into store‑mode `.7z.001`, `.7z.002`, … volumes so they never exceed GitHub’s 100 MB file limit.
-- Skips checksum / signature files automatically.
-- Renames extension‑less files using MIME‑type detection.
-- Pushes the mirrored files back to your own GitHub repository.
+**This tool is provided “as is”, without warranty of any kind.**  
+I do **not** take any responsibility for the content that is downloaded, stored,
+or distributed by anyone using this script.  
 
-Everything runs as a **GitHub Actions workflow** every 12 hours (or on push).
+All files mirrored by this repository are the **property of their respective
+owners**. This project is intended for **personal/archival use, software
+preservation, and fair‑use mirroring** only.  
 
----
+If you are a copyright holder and believe your work is being mirrored without
+permission, please open an issue and the content will be removed immediately.
 
-## 2. Setup
-
-### a. Workflow file
-Copy the workflow from the repository into `.github/workflows/downloader.yml`.  
-No additional secrets are needed (the built‑in `GITHUB_TOKEN` is used).  
-Make sure the workflow has `contents: write` permission.
-
-### b. Dependencies
-The workflow installs:
-- `aria2` – fast downloader
-- `p7zip-full` – 7‑Zip CLI
-- `requests`, `psutil`, `tqdm` – Python modules
-
-### c. Repository structure
-Your repository should contain:
-
-```
-.
-├── .github/workflows/download.yml
-├── scripts/download_manager.py   ← the Python script
-├── repo.txt                      ← your list of sources
-├── state.json                    ← auto‑generated, tracks last known release
-└── INDEX.md                     ← auto‑generated index
-```
+**I do not endorse, verify, or guarantee the safety of any linked content.**
+Download and use mirrored files at your own risk.
 
 ---
 
-## 3. `repo.txt` syntax
+## 📥 Download Index
 
-Each non‑empty, non‑comment line specifies either a **GitHub release source** or a **direct URL**.
-
-### a. GitHub release with default filters
-```
-owner/repo
-```
-Downloads all assets with the default extensions: `.exe`, `.zip`, `.apk`
-
-**Example:**
-```
-imputnet/helium-windows
-```
-
-### b. Specify file extensions
-```
-owner/repo [ext1, ext2, ...]
-```
-Downloads only assets ending with those extensions (case‑insensitive).  
-Extensions can be given with or without a leading dot.
-
-**Example – download only `.exe` and `.appx`:**
-```
-imputnet/helium-windows [exe, appx]
-```
-
-### c. Use filename globs
-```
-owner/repo [helium_*_x64-installer.exe]
-```
-Globs support `*` (any characters) and `?` (any single character).  
-Matching is **case‑insensitive**.
-
-**Example – download all macOS ZIP files:**
-```
-clash-verge-rev/clash-verge-rev [Clash.Verge_*_x64.dmg, *.zip]
-```
-
-### d. Download all assets
-```
-owner/repo [all]
-```
-Downloads **every** asset in the release, minus checksum/signature files (see §9).
-
-### e. No compression (store‑only)
-```
-owner/repo [all, nocompress]
-```
-- Files **≤ 99 MB** are kept **raw** (no `.7z` wrapper).
-- Files **> 99 MB** are split into store‑mode `.7z` volumes (no compression).
-
-`nocompress` can be combined with any other filter.
-
-**Example – all APK files without compression:**
-```
-MetaCubeX/ClashMetaForAndroid [cmfa-*-meta-universal-release.apk, nocompress]
-```
-
-### f. Release page URL
-You can also paste the full release URL. It will be automatically converted to `owner/repo`.
-
-```
-https://github.com/imputnet/helium-windows/releases/latest [helium_*_x64-installer.exe]
-```
-
-### g. Direct download URL
-Any line starting with `http://` or `https://` that is **not** a GitHub release page will be treated as a one‑off direct download.
-
-```
-https://example.com/files/tool.zip
-```
-
-`[nocompress]` works here too.
+[View all mirrored downloads →](INDEX.md)
 
 ---
 
-## 4. Commit‑triggered downloads
+## How the manager works
 
-If you push a commit containing one or more URLs, the workflow will download those URLs immediately.
+1. Reads `repo.txt` for a list of GitHub repositories (or direct URLs).  
+2. Fetches the **latest** release (including pre‑releases if `[pre]` is set).  
+3. Downloads only the assets that match your filters.  
+4. Compresses each asset into a **`.zip`** archive (Deflate, level 9 by default).  
+   - If compression doesn’t reduce the file size, the original is kept as‑is.  
+5. Splits any file larger than **99 MB** into store‑mode `.zip` volumes.  
+6. Writes per‑folder `README.md` files (shown inside `INDEX.md`).  
+7. Pushes everything back to your repository.
 
-### a. Single URL
-Commit message:
-```
-https://example.com/file.bin
-```
+All settings can be tweaked in **`config.toml`** (compression level, split size, etc.).
 
-### b. Multiple URLs
-```
-https://example.com/one.exe
-https://example.com/two.zip
-```
+---
 
-### c. GitHub release URL
-```
-https://github.com/imputnet/helium-windows/releases/latest [helium_*_x64-installer.exe]
-```
-This is treated as `owner/repo` with the given filter and will be stored in `repos/`.
+## Setup
 
-### d. Using `[nocompress]` in commits
-Add `[nocompress]` anywhere in the commit message.  
-It applies to **all URLs** in that commit.
+1. Copy the workflow file into `.github/workflows/downloader.yml`.  
+2. Ensure the workflow has `contents: write` permission.  
+3. The script is stored at `scripts/download_manager.py`.  
+4. Create a `repo.txt` (see syntax below).  
+5. (Optional) Create a `config.toml` next to the script for custom settings.  
+
+The workflow runs every **12 hours** and on every push to `main`.
+
+---
+
+## `repo.txt` syntax
+
+| Syntax | Explanation |
+|--------|-------------|
+| `owner/repo` | Download all assets with default extensions (`.exe`, `.zip`, `.apk`) |
+| `owner/repo [ext1, ext2]` | Only assets ending with those extensions |
+| `owner/repo [file*name.exe]` | Globs – wildcards `*` and `?` allowed |
+| `owner/repo [all]` | All assets (except checksum/signature files) |
+| `owner/repo [nocompress]` | Keep files ≤ 99 MB raw, split larger ones without compression |
+| `owner/repo [pre]` | Fetch the absolute latest release (including pre‑releases) |
+| `owner/repo [lfs]` | Use Git LFS for the file – no compression, no splitting |
+| `https://github.com/owner/repo/releases/latest [filter]` | Full release URL, automatically converted |
+| `https://example.com/file.zip` | Direct download URL |
+| `https://example.com/file.zip [nocompress]` | Direct download without compression |
+
+Flags can be combined: `[pre, nocompress, all]`
+
+---
+
+## Commit‑triggered downloads
+
+Push a commit containing one or more URLs – the workflow will download them
+immediately.  
+
+Add `[nocompress]` anywhere in the commit message to skip compression for **all**
+URLs in that commit.
 
 ```
-https://iamworker.com/s7/v5/download/...?token=... [nocompress]
+git commit -m "https://example.com/tool.zip [nocompress]"
 ```
 
 ---
 
-## 5. Range downloads
+## Range downloads
 
-You can download a specific byte range of a large file and have it automatically split into volumes.
-
+Download a specific byte range of a large file.  
 Commit message format:
+
 ```
 URL [startMB-endMB]
 ```
-`start` and `end` are in megabytes (MB).
 
-**Example – download the first 200 MB of an ISO:**
+**Example – download the first 200 MB:**
+
 ```
 https://example.com/big.iso [0-200]
 ```
 
-The range download uses `curl -r` and saves the chunk inside a temporary `.tmp` file, then splits it if needed.
-
 ---
 
-## 6. Output & file structure
+## Output & file structure
 
-Each download creates a **timestamped folder**:
+Each download creates a timestamped folder:
 
-- **`downloads/`** – direct URLs
-- **`repos/`** – GitHub releases
-
-Folder name format: `{release‑name}_{tag}` or `{filename}_{timestamp}`.
+- **`downloads/`** – direct URLs  
+- **`repos/`** – GitHub releases  
 
 Inside each folder:
-- **The mirrored file(s)** – either raw or inside a `.7z` container.
-- `INDEX.md` – list of files with sizes and links.
-- `metadata.json` – URL, method, CRC32 checksums, and asset info.
+
+- The mirrored file(s) – either raw or inside a `.zip` container.  
+- `README.md` – list of files with sizes, CRC32 hashes, and compression percentages.  
+- `metadata.json` – URL, method, checksums, and asset info.  
 
 All files are accessible via raw GitHub links.
 
 ---
 
-## 7. Extracting `.7z` files
+## Extracting `.zip` files
 
-**Single `.7z` file:**
+**Single `.zip` file:**  
 ```bash
-7z x file.7z
+unzip file.zip
 ```
 
-**Split volumes (`.7z.001`, `.7z.002`, …):**
+**Split volumes (`.z01`, `.z02`, … `.zip`):**  
+Place all parts in the same folder and run:
+
 ```bash
-7z x file.7z.001
+zip -FF file.zip --out repaired.zip && unzip repaired.zip
 ```
-The rest of the volumes must be in the same directory.  
-For an installer originally named `installer.exe`, you’ll get `installer.exe` after extraction.
+
+Or use a tool like `7z`:
+
+```bash
+7z x file.zip
+```
 
 ---
 
-## 8. Incremental updates
+## Incremental updates
 
-The script remembers the **tag** and **asset names + sizes** of the last processed release.  
-On subsequent runs it compares the current release with the stored data.  
-If **nothing changed**, the release is **skipped** completely – no re‑download, no new commit.
+- **GitHub releases** – the script remembers the tag of the last mirrored release.  
+  If the tag hasn’t changed, the whole release is **skipped**.  
+- **Direct downloads** – once a direct URL has been downloaded, it’s recorded in
+  `state.json`. The same URL will never be downloaded again.
 
 This keeps your repository small and the runs fast.
 
 ---
 
-## 9. Automatic checksum / signature skipping
+## Automatic checksum / signature skipping
 
 The following extensions are **always ignored**, even with `[all]`:
 
-`.sha256`, `.sha256sum`, `.sha512`, `.sha512sum`, `.sha1`, `.sha1sum`, `.md5`, `.md5sum`, `.asc`, `.sig`, `.sign`, `.pgp`, `.blake2b`, `.blake2s`, `.sha3`, and various `.txt`/`.sums` variants.
+`.sha256`, `.sha256sum`, `.sha512`, `.sha512sum`, `.sha1`, `.sha1sum`, `.md5`,
+`.md5sum`, `.asc`, `.sig`, `.sign`, `.pgp`, `.blake2b`, `.blake2s`, `.sha3`,
+and various `.txt`/`.sums` variants.
 
 ---
 
-## 10. Extension‑less files
+## Extension‑less files
 
-If a downloaded file has no extension (e.g. an executable named `zyrln-linux-amd64`), the script uses `file --mime-type` and Python’s `mimetypes` module to guess the correct extension and renames the file.
+If a downloaded file has no extension (e.g. an executable named `zyrln-linux-amd64`),
+the script uses `file --mime-type` and Python’s `mimetypes` module to guess the
+correct extension and renames the file.
 
-- `video/mp4` → `*.mp4`
-- `application/x-dosexec` → `*.exe`
+- `video/mp4` → `*.mp4`  
+- `application/x-dosexec` → `*.exe`  
 
 If the type cannot be determined, the file is **kept as‑is** (no renaming, no deletion).
 
 ---
 
-## 11. CRC32 integrity
+## Per‑file CRC32 & compression percentage
 
-After processing, a **CRC32** checksum is computed for every final file and stored in `metadata.json`.  
-This allows users to verify their downloads without the overhead of SHA‑256.
+Inside each folder’s `README.md` (and therefore in `INDEX.md`), you’ll see:
 
----
-
-## 12. Tips
-
-- Use **glob filters** to catch version‑independent installers (e.g. `app_*_setup.exe`).
-- Use **`[nocompress]`** for text‑based rulesets or configuration files that are updated frequently and are already small.
-- The workflow runs every **12 hours** – no need to poll manually.
-- If a push fails because of a 100 MB limit, check the logs – the split guarantee should have kicked in; if not, temporarily increase `SPLIT_MB` to 95.
+- **CRC32** checksum for every final file.  
+- **Compression percentage** (e.g. `-12.3%`) showing the space saved compared to the
+  original release asset.
 
 ---
 
-## 13. Example `repo.txt`
+## Configuration (`config.toml`)
+
+Place a file named `config.toml` next to `download_manager.py` to override defaults:
+
+```toml
+split_mb = 99                # file‑size threshold for splitting (MiB)
+push_batch_bytes = 367001600  # max bytes per git push (350 MiB)
+max_parallel = 4              # simultaneous downloads
+compression_level = 9         # 0 = store, 1 = fastest, 9 = best
+compression_method = "Deflate" # kept for compatibility, ignored
+extract_archive_exts = [".zip", ".jar", ".war", ".ear"]
+skip_asset_exts = [ … ]       # list of extensions to ignore
+```
+
+If the file is missing, defaults are used.
+
+---
+
+## Tips
+
+- Use **glob filters** to catch version‑independent installers (e.g. `app_*_setup.exe`).  
+- Use **`[nocompress]`** for rule sets / config files that are updated frequently.  
+- The workflow runs every **12 hours** – no need to poll manually.  
+- If a push fails because of a 100 MB limit, check the logs – the split guarantee should
+  have kicked in; if not, temporarily increase `SPLIT_MB` to 95.
+
+---
+
+## Example `repo.txt`
 
 ```
 # VPN apps
 therealaleph/MasterHttpRelayVPN-RUST [all]
 ajavadinezhad/zyrln [all, nocompress]
 
-# Windows tools
+# Tools
+2dust/v2rayN [v2rayN-linux-64.zip, v2rayN-windows-64.zip, pre]
+2dust/v2rayNG [v2rayNG_*_universal.apk, pre]
+
+# Windows
 imputnet/helium-windows [helium_*_x64-installer.exe]
 
 # Android
 MetaCubeX/ClashMetaForAndroid [cmfa-*-meta-universal-release.apk]
 
-# Direct downloads
-https://dl.iamworker.com/s7/v5/download/...?token=... [nocompress]
+# Rules (raw, no compression)
+Chocolate4U/Iran-v2ray-rules [all, nocompress, pre]
+
+# Direct download
+https://example.com/files/tool.zip [nocompress]
 ```
