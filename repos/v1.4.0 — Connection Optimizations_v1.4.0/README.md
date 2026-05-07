@@ -1,11 +1,12 @@
-# v1.4.0 — Connection Optimizations
+# ajavadinezhad/zyrln
 
 | Property | Value |
 |--- |---|
-| **URL** | https://github.com/ajavadinezhad/zyrln/releases/download/v1.4.0/zyrln-windows-amd64.exe |
-| **Downloaded** | 2026-05-07 17:07 UTC |
-| **Source** | GitHub Release |
-| **Release** | v1.4.0 — Connection Optimizations |
+| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.4.0 |
+| **Release Date** | 2026-05-06 03:55 UTC (1 day ago) |
+| **Total Size** | 36.9 MB |
+| **Hash (CRC32)** | 3b406e67 |
+| **Release Name** | v1.4.0 — Connection Optimizations |
 | **Tag** | v1.4.0 |
 
 <details><summary>Files</summary>
