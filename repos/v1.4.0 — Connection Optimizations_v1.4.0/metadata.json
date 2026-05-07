@@ -1,0 +1,30 @@
+{
+  "url": "https://github.com/ajavadinezhad/zyrln/releases/download/v1.4.0/zyrln-windows-amd64.exe",
+  "method": "github_release",
+  "repo": "ajavadinezhad/zyrln",
+  "tag": "v1.4.0",
+  "assets": [
+    {
+      "name": "zyrln-1.4.0.apk",
+      "size": 24034600
+    },
+    {
+      "name": "zyrln-linux-amd64",
+      "size": 10114063
+    },
+    {
+      "name": "zyrln-relay",
+      "size": 9330756
+    },
+    {
+      "name": "zyrln-windows-amd64.exe",
+      "size": 10159616
+    }
+  ],
+  "crc32": {
+    "zyrln-relay.7z": "17291b65",
+    "zyrln-windows-amd64.7z": "d97f25c7",
+    "zyrln-1.4.0.7z": "f670866c",
+    "zyrln-linux-amd64.7z": "f5606661"
+  }
+}

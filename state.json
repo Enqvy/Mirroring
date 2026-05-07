@@ -1,5 +1,10 @@
 {
-  "repos": {},
+  "repos": {
+    "ajavadinezhad/zyrln": {
+      "folder": "repos/v1.4.0 \u2014 Connection Optimizations_v1.4.0",
+      "tag": "v1.4.0"
+    }
+  },
   "downloads": {},
   "ranges": {}
 }
