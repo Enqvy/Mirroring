@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mirror Manager – production release.
+Mirror Manager
 
 Fetches the latest GitHub releases (or direct URLs), compresses them,
 and pushes to your repository.
@@ -564,8 +564,10 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
 
     if not wanted:
         log("⚠️  No matching assets found.")
+        # Remember the tag so we skip next time
         state["repos"][repo] = {"folder": str(folder), "tag": tag}
         save_state(state)
+        # Remove the empty folder immediately so it never gets committed
         if folder.exists():
             shutil.rmtree(str(folder), ignore_errors=True)
         return str(folder), repo, tag
@@ -832,8 +834,10 @@ def process_updates(no_push=False):
         except Exception as e:
             log(f"❌ {e}", "ERROR")
 
-    # Reload state to pick up changes made by individual release functions
+    # ---------- CRITICAL FIX ----------
+    # Reload the state from disk so we see all repo updates saved by each github_release call
     state = load_state()
+    # ------------------------------------
     update_index_md(state)
     new_folders.extend(["state.json", "INDEX.md"])
     if not no_push:
