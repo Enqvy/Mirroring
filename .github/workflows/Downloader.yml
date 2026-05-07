@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 👈 Node 24 for cache action
 
     steps:
       - name: Fast blobless checkout
@@ -22,7 +20,7 @@ jobs:
           git clone --depth=1 --filter=blob:none --single-branch --no-checkout \
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" .
           git sparse-checkout init --cone
-          git sparse-checkout set scripts/ .github/workflows/ repo.txt state.json README.md
+          git sparse-checkout set scripts/ .github/workflows/ repo.txt state.json INDEX.md
           git checkout
           git sparse-checkout add downloads/ repos/
           mkdir -p downloads repos
