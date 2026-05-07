@@ -9,7 +9,7 @@
 | **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.4.0 |
 | **Release Date** | 2026-05-06 03:55 UTC (1 day ago) |
 | **Total Size** | 36.9 MB |
-| **Hash (CRC32)** | 3b406e67 |
+| **Hash (CRC32)** | fb6bd410 |
 | **Release Name** | v1.4.0 — Connection Optimizations |
 | **Tag** | v1.4.0 |
 
