@@ -48,7 +48,7 @@ _DEFAULTS = {
     "max_parallel": 4,
     "compression_level": 9,                  # 0 = store, 1‑9 = deflate effort
     "compression_method": "Deflate",         # kept for compatibility, ignored
-    "extract_archive_exts": [".zip", ".jar", ".war", ".ear"],
+    "extract_archive_exts": [".zip", ".7z"],
     "skip_asset_exts": [
         ".sha256", ".sha256sum", ".sha512", ".sha512sum",
         ".sha1", ".sha1sum", ".md5", ".md5sum",
@@ -329,11 +329,11 @@ def _archive_dir(tmpdir, out_zip):
 
 def _store_archive(filepath, out_zip):
     """Create a .zip container with NO compression (store) for a non‑archive file."""
-    saved_level = COMPRESSION_LEVEL
     global COMPRESSION_LEVEL
+    saved_level = COMPRESSION_LEVEL
     COMPRESSION_LEVEL = 0
     try:
-        _archive_single(filepath, out_zip)
+        _archive_single(filepath, out_zip, level=0)
     finally:
         COMPRESSION_LEVEL = saved_level
 
