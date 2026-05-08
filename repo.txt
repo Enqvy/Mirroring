@@ -1,6 +1,7 @@
 # VPN apps
 ThisIsDara/mhr-cfw-go [all,pre]
 ajavadinezhad/zyrln [all,pre]
+MasterHttpRelayVPN-RUST [all,pre]
 
 # v2rayN - Windows & Linux (64-bit)
 2dust/v2rayN [v2rayN-windows-64.zip, v2rayN-linux-64.zip,pre]
