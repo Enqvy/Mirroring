@@ -16,13 +16,13 @@
       "folder": "repos/202604280714_202604280714",
       "tag": "202604280714"
     },
-    "ThisIsDara/mhr-cfw-go": {
-      "folder": "repos/v1.2.0_v1.2.0",
-      "tag": "v1.2.0"
-    },
     "ajavadinezhad/zyrln": {
       "folder": "repos/Zyrln v1.5.1-pre2_v1.5.1-pre2",
       "tag": "v1.5.1-pre2"
+    },
+    "ThisIsDara/mhr-cfw-go": {
+      "folder": "repos/v1.3.0_v1.3.0",
+      "tag": "v1.3.0"
     }
   },
   "downloads": {},

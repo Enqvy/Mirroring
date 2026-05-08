@@ -1,0 +1,48 @@
+{
+  "url": "https://github.com/ThisIsDara/mhr-cfw-go/releases/download/v1.3.0/mhr-cfw-go-windows-arm64.exe",
+  "method": "github_release",
+  "repo": "ThisIsDara/mhr-cfw-go",
+  "tag": "v1.3.0",
+  "assets": [
+    {
+      "name": "mhr-cfw-go-darwin-amd64",
+      "size": 6924736
+    },
+    {
+      "name": "mhr-cfw-go-darwin-arm64",
+      "size": 6679090
+    },
+    {
+      "name": "mhr-cfw-go-linux-amd64",
+      "size": 6795524
+    },
+    {
+      "name": "mhr-cfw-go-linux-arm64",
+      "size": 6553752
+    },
+    {
+      "name": "mhr-cfw-go-windows-386.exe",
+      "size": 6688256
+    },
+    {
+      "name": "mhr-cfw-go-windows-amd64.exe",
+      "size": 6949888
+    },
+    {
+      "name": "mhr-cfw-go-windows-arm64.exe",
+      "size": 6525952
+    }
+  ],
+  "crc32": {
+    "mhr-cfw-go-windows-arm64.zip": "7fa6bb79",
+    "mhr-cfw-go-windows-386.zip": "c2c020f8",
+    "mhr-cfw-go-darwin-amd64.zip": "fdd9250c",
+    "mhr-cfw-go-linux-arm64.zip": "386cf7b6",
+    "mhr-cfw-go-linux-amd64.zip": "82a19433",
+    "mhr-cfw-go-windows-amd64.zip": "a06bab2d",
+    "mhr-cfw-go-darwin-arm64.zip": "a60440e0"
+  },
+  "total_size": 20632518,
+  "release_date": "2026-05-08T04:17:38Z",
+  "use_lfs": false
+}
