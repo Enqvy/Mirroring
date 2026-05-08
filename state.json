@@ -23,6 +23,10 @@
     "ThisIsDara/mhr-cfw-go": {
       "folder": "repos/v1.3.0_v1.3.0",
       "tag": "v1.3.0"
+    },
+    "therealaleph/MasterHttpRelayVPN-RUST": {
+      "folder": "repos/v1.9.18_v1.9.18",
+      "tag": "v1.9.18"
     }
   },
   "downloads": {},

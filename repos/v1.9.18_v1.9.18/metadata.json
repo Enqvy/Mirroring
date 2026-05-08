@@ -1,0 +1,93 @@
+{
+  "url": "https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/download/v1.9.18/mhrv-rs-windows-amd64.zip",
+  "method": "github_release",
+  "repo": "therealaleph/MasterHttpRelayVPN-RUST",
+  "tag": "v1.9.18",
+  "assets": [
+    {
+      "name": "mhrv-rs-android-arm64-v8a-v1.9.18.apk",
+      "size": 19506201
+    },
+    {
+      "name": "mhrv-rs-android-armeabi-v7a-v1.9.18.apk",
+      "size": 16929309
+    },
+    {
+      "name": "mhrv-rs-android-universal-v1.9.18.apk",
+      "size": 43107103
+    },
+    {
+      "name": "mhrv-rs-android-x86-v1.9.18.apk",
+      "size": 20288029
+    },
+    {
+      "name": "mhrv-rs-android-x86_64-v1.9.18.apk",
+      "size": 20545899
+    },
+    {
+      "name": "mhrv-rs-linux-amd64.tar.gz",
+      "size": 10291516
+    },
+    {
+      "name": "mhrv-rs-linux-arm64.tar.gz",
+      "size": 2244583
+    },
+    {
+      "name": "mhrv-rs-linux-musl-amd64.tar.gz",
+      "size": 2478528
+    },
+    {
+      "name": "mhrv-rs-linux-musl-arm64.tar.gz",
+      "size": 2285756
+    },
+    {
+      "name": "mhrv-rs-macos-amd64-app.zip",
+      "size": 5321698
+    },
+    {
+      "name": "mhrv-rs-macos-amd64.tar.gz",
+      "size": 7596871
+    },
+    {
+      "name": "mhrv-rs-macos-arm64-app.zip",
+      "size": 4902797
+    },
+    {
+      "name": "mhrv-rs-macos-arm64.tar.gz",
+      "size": 6966944
+    },
+    {
+      "name": "mhrv-rs-openwrt-mipsel-softfloat.tar.gz",
+      "size": 2414637
+    },
+    {
+      "name": "mhrv-rs-raspbian-armhf.tar.gz",
+      "size": 2174505
+    },
+    {
+      "name": "mhrv-rs-windows-amd64.zip",
+      "size": 7977269
+    }
+  ],
+  "crc32": {
+    "mhrv-rs-linux-musl-arm64.tar.zip": "3b8c83be",
+    "mhrv-rs-windows-amd64.zip": "502102cc",
+    "mhrv-rs-linux-musl-amd64.tar.zip": "d3ca353e",
+    "mhrv-rs-macos-amd64.tar.zip": "fd04f4cb",
+    "mhrv-rs-macos-amd64-app.zip": "2a7e0a0a",
+    "mhrv-rs-macos-arm64.tar.zip": "1544bc76",
+    "mhrv-rs-linux-amd64.tar.zip": "a2434907",
+    "mhrv-rs-android-universal-v1.9.18.zip": "457b393a",
+    "mhrv-rs-android-x86_64-v1.9.18.zip": "05e289e1",
+    "mhrv-rs-linux-arm64.tar.zip": "ccc6a038",
+    "mhrv-rs-openwrt-mipsel-softfloat.tar.zip": "648cae6d",
+    "mhrv-rs-android-arm64-v8a-v1.9.18.zip": "acd7f3d9",
+    "mhrv-rs-macos-arm64-app.zip": "8ca09c02",
+    "mhrv-rs-android-x86-v1.9.18.zip": "4c0a546c",
+    "mhrv-rs-android-armeabi-v7a-v1.9.18.zip": "6b883f63",
+    "mhrv-rs-raspbian-armhf.tar.zip": "c63fc07f"
+  },
+  "total_size": 137773113,
+  "release_date": "2026-05-08T03:15:13Z",
+  "use_lfs": false
+}
