@@ -2,27 +2,6 @@
 
 ---
 
-# 2dust/v2rayN
-
-| Property | Value |
-|--- |---|
-| **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.1 |
-| **Release Date** | 2026-04-30 12:15 UTC (7 days ago) |
-| **Total Size** | 270.5 MB |
-| **Release Name** | 7.21.1 |
-| **Tag** | 7.21.1 |
-
-<details><summary>Files</summary>
-
-- [`v2rayN-linux-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.1_7.21.1%2Fv2rayN-linux-64_split.z01) (99.0 MB) `(CRC32: 0701580a)`
-- [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.1_7.21.1%2Fv2rayN-linux-64_split.zip) (20.7 MB) `(CRC32: 1382de5d)` (-82.7%)
-- [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.1_7.21.1%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: 1fcf6ffb)`
-- [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.1_7.21.1%2Fv2rayN-windows-64_split.zip) (51.8 MB) `(CRC32: f1087b11)` (-65.6%)
-
-</details>
-
----
-
 # 2dust/v2rayNG
 
 | Property | Value |
@@ -89,27 +68,6 @@
 
 ---
 
-# ajavadinezhad/zyrln
-
-| Property | Value |
-|--- |---|
-| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre2 |
-| **Release Date** | 2026-05-07 23:54 UTC (2 hr ago) |
-| **Total Size** | 33.4 MB |
-| **Release Name** | Zyrln v1.5.1-pre2 |
-| **Tag** | v1.5.1-pre2 |
-
-<details><summary>Files</summary>
-
-- [`run.bat`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Frun.bat) (464.0 B) `(CRC32: a5575c57)` (0.0%)
-- [`zyrln-1.5.1.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Fzyrln-1.5.1.zip) (22.0 MB) `(CRC32: c355a83d)` (-4.2%)
-- [`zyrln-linux-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Fzyrln-linux-amd64.zip) (5.7 MB) `(CRC32: 139c0d2c)` (-43.4%)
-- [`zyrln-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Fzyrln-windows-amd64.zip) (5.7 MB) `(CRC32: 2ac0742d)` (-43.7%)
-
-</details>
-
----
-
 # ThisIsDara/mhr-cfw-go
 
 | Property | Value |
@@ -162,6 +120,47 @@
 - [`mhrv-rs-openwrt-mipsel-softfloat.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.18_v1.9.18%2Fmhrv-rs-openwrt-mipsel-softfloat.tar.zip) (2.3 MB) `(CRC32: 648cae6d)` (-0.3%)
 - [`mhrv-rs-raspbian-armhf.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.18_v1.9.18%2Fmhrv-rs-raspbian-armhf.tar.zip) (2.1 MB) `(CRC32: c63fc07f)` (-0.2%)
 - [`mhrv-rs-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.18_v1.9.18%2Fmhrv-rs-windows-amd64.zip) (7.6 MB) `(CRC32: 502102cc)` (0.0%)
+
+</details>
+
+---
+
+# ajavadinezhad/zyrln
+
+| Property | Value |
+|--- |---|
+| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre3 |
+| **Release Date** | 2026-05-08 05:28 UTC (8 hr ago) |
+| **Total Size** | 33.4 MB |
+| **Release Name** | Zyrln v1.5.1-pre3 |
+| **Tag** | v1.5.1-pre3 |
+
+<details><summary>Files</summary>
+
+- [`zyrln-1.5.1.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre3_v1.5.1-pre3%2Fzyrln-1.5.1.zip) (22.0 MB) `(CRC32: f0b7f581)` (-4.2%)
+- [`zyrln-linux-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre3_v1.5.1-pre3%2Fzyrln-linux-amd64.zip) (5.7 MB) `(CRC32: d96500e9)` (-43.4%)
+- [`zyrln-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre3_v1.5.1-pre3%2Fzyrln-windows-amd64.zip) (5.7 MB) `(CRC32: 03a4750d)` (-43.7%)
+
+</details>
+
+---
+
+# 2dust/v2rayN
+
+| Property | Value |
+|--- |---|
+| **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.2 |
+| **Release Date** | 2026-05-08 12:13 UTC (1 hr ago) |
+| **Total Size** | 270.2 MB |
+| **Release Name** | 7.21.2 |
+| **Tag** | 7.21.2 |
+
+<details><summary>Files</summary>
+
+- [`v2rayN-linux-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-linux-64_split.z01) (99.0 MB) `(CRC32: a8528832)`
+- [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-linux-64_split.zip) (20.6 MB) `(CRC32: afff637b)` (-82.8%)
+- [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: 5a1e9935)`
+- [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-windows-64_split.zip) (51.7 MB) `(CRC32: 85e91444)` (-65.7%)
 
 </details>
 
