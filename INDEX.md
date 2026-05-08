@@ -2,30 +2,6 @@
 
 ---
 
-## v1.9.17_v1.9.17
-
----
-
-# ajavadinezhad/zyrln
-
-| Property | Value |
-|--- |---|
-| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre1 |
-| **Release Date** | 2026-05-07 18:54 UTC (3 hr ago) |
-| **Total Size** | 33.4 MB |
-| **Release Name** | Zyrln v1.5.1-pre1 |
-| **Tag** | v1.5.1-pre1 |
-
-<details><summary>Files</summary>
-
-- [`zyrln-1.5.1.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre1_v1.5.1-pre1%2Fzyrln-1.5.1.zip) (22.0 MB) `(CRC32: 23b2179c)` (-4.1%)
-- [`zyrln-linux-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre1_v1.5.1-pre1%2Fzyrln-linux-amd64.zip) (5.7 MB) `(CRC32: 16e0562a)` (-43.4%)
-- [`zyrln-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre1_v1.5.1-pre1%2Fzyrln-windows-amd64.zip) (5.7 MB) `(CRC32: 108f0b8b)` (-43.7%)
-
-</details>
-
----
-
 # 2dust/v2rayN
 
 | Property | Value |
@@ -127,6 +103,27 @@
 
 - [`mhr-cfw-go-linux.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.2.0_v1.2.0%2Fmhr-cfw-go-linux.zip) (2.9 MB) `(CRC32: 9e9c5780)` (-55.2%)
 - [`mhr-cfw-go-windows.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.2.0_v1.2.0%2Fmhr-cfw-go-windows.zip) (2.9 MB) `(CRC32: 26596f90)` (-55.5%)
+
+</details>
+
+---
+
+# ajavadinezhad/zyrln
+
+| Property | Value |
+|--- |---|
+| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre2 |
+| **Release Date** | 2026-05-07 23:54 UTC (2 hr ago) |
+| **Total Size** | 33.4 MB |
+| **Release Name** | Zyrln v1.5.1-pre2 |
+| **Tag** | v1.5.1-pre2 |
+
+<details><summary>Files</summary>
+
+- [`run.bat`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Frun.bat) (464.0 B) `(CRC32: a5575c57)` (0.0%)
+- [`zyrln-1.5.1.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Fzyrln-1.5.1.zip) (22.0 MB) `(CRC32: c355a83d)` (-4.2%)
+- [`zyrln-linux-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Fzyrln-linux-amd64.zip) (5.7 MB) `(CRC32: 139c0d2c)` (-43.4%)
+- [`zyrln-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre2_v1.5.1-pre2%2Fzyrln-windows-amd64.zip) (5.7 MB) `(CRC32: 2ac0742d)` (-43.7%)
 
 </details>
 
