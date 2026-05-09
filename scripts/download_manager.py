@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-Mirror Manager – production release (ZIP backend, store‑only for .zip/.7z).
+Mirror Manager – production release (ZIP backend, store‑only for .zip/.7z,
+negation filters, fresh download timestamps).
 
 Fetches the latest GitHub releases (or direct URLs), compresses them
 into .zip containers (Deflate, level 9 by default, configurable),
 and pushes to your repository.
 
 Key features:
-- Reads repo.txt for sources; supports inline flags [nocompress], [pre], [lfs].
+- Reads repo.txt for sources; supports inline flags [nocompress], [pre], [lfs],
+  and negation filters like [!*fdroid*] to exclude matching files.
 - Incremental: skips releases when the tag hasn't changed and direct downloads
-  when they’ve already been mirrored.
+  when they’ve already been mirrored. Per‑folder READMEs are still updated with
+  a fresh "Downloaded" timestamp on every run.
 - Compresses everything into .zip containers (Deflate, level 9) **except**
   `.zip` and `.7z` files, which are stored as‑is (only split if > 99 MB).
 - Files larger than 99 MB are automatically split using zip's multi‑volume feature.
@@ -208,6 +211,7 @@ def write_metadata(folder, url, method, **extra):
         json.dump({"url": url, "method": method, **extra}, f, indent=2)
 
 def write_readme(folder, title, url, method, extra=None, hashes=None, savings=None):
+    """Write per‑folder README. 'savings' is dict file_name -> "-12.3%"."""
     lines = [f"# {title}", "", "| Property | Value |", "|--- |---|",
              f"| **URL** | {url} |"]
     if extra:
@@ -247,10 +251,13 @@ def update_index_md(state):
     log("📄 INDEX.md regenerated")
 
 # ------------------------------------------------------------------------------
-# Filter parsing – dot means filename, no dot means extension, * = glob
+# Filter parsing – dot means filename, no dot means extension, * = glob,
+# !prefix = exclusion filter
 # ------------------------------------------------------------------------------
 def parse_filter(line):
-    """Return (repo, filters, no_compress, pre_release, use_lfs)."""
+    """Return (repo, filters, no_compress, pre_release, use_lfs).
+    'filters' may contain strings prefixed with '!' for exclusion patterns.
+    """
     m = FILTER_PATTERN.match(line.strip())
     if not m:
         return line.strip(), None, False, False, False
@@ -266,27 +273,78 @@ def parse_filter(line):
         else: real.append(f)
     if not real:
         return repo, None, no_compress, pre_release, use_lfs
+
+    # If 'all' is present, keep it as literal "all" to signify include everything
     if 'all' in [r.lower() for r in real]:
-        return repo, ["all"], no_compress, pre_release, use_lfs
+        # but we also want to support combining 'all' with exclusions,
+        # so we don't early return; we'll add "all" as an inclusion token.
+        processed = ["all"]
+        for r in real:
+            if r.lower() == 'all':
+                continue
+            # handle exclusions etc.
+            if r.startswith('!'):
+                # strip ! and process as pattern
+                pattern = r[1:]
+                if '*' in pattern or '?' in pattern or '.' in pattern:
+                    processed.append(f"!{pattern}")
+                else:
+                    processed.append(f"!.{pattern.lstrip('.')}")
+            else:
+                if '*' in r or '?' in r:
+                    processed.append(r)
+                elif '.' in r:
+                    processed.append(r)
+                else:
+                    processed.append(f'.{r.lstrip(".")}')
+        return repo, processed, no_compress, pre_release, use_lfs
 
     processed = []
     for r in real:
-        if '*' in r or '?' in r:
-            processed.append(r)                    # glob
-        elif '.' in r:
-            processed.append(r)                    # exact filename
+        if r.startswith('!'):
+            pattern = r[1:]
+            if '*' in pattern or '?' in pattern or '.' in pattern:
+                processed.append(f"!{pattern}")
+            else:
+                processed.append(f"!.{pattern.lstrip('.')}")
         else:
-            processed.append(f'.{r.lstrip(".")}')  # extension
+            if '*' in r or '?' in r:
+                processed.append(r)
+            elif '.' in r:
+                processed.append(r)
+            else:
+                processed.append(f'.{r.lstrip(".")}')
     return repo, processed, no_compress, pre_release, use_lfs
 
 def asset_matches(name, filters):
-    if not filters or filters == ["all"]: return True
+    """Return True if name matches filters, respecting exclusions (prefixed with '!')."""
+    if not filters:
+        return True
     nl = name.lower()
+    # Check exclusions first
     for f in filters:
+        if f.startswith('!'):
+            pattern = f[1:]
+            if pattern.startswith('.'):
+                if nl.endswith(pattern.lower()):
+                    return False
+            else:
+                if fnmatch.fnmatch(nl, pattern.lower()):
+                    return False
+    # If "all" is present, include everything (except exclusions)
+    if "all" in filters:
+        return True
+    # Otherwise, at least one inclusion filter must match
+    inc = [f for f in filters if not f.startswith('!')]
+    if not inc:
+        return True  # everything allowed if no inclusion filters
+    for f in inc:
         if f.startswith('.'):
-            if nl.endswith(f.lower()): return True
+            if nl.endswith(f.lower()):
+                return True
         else:
-            if fnmatch.fnmatch(nl, f.lower()): return True
+            if fnmatch.fnmatch(nl, f.lower()):
+                return True
     return False
 
 def is_skip_asset(name):
@@ -548,6 +606,16 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
         folder = state["downloads"][url].get("folder")
         if folder and os.path.exists(folder):
             log(f"✅ Direct URL already mirrored, skipping.")
+            # Update timestamp in existing README
+            meta_path = os.path.join(folder, "metadata.json")
+            hashes = {}
+            if os.path.exists(meta_path):
+                with open(meta_path) as f:
+                    meta = json.load(f)
+                hashes = meta.get("crc32", {})
+            extra = {"Downloaded": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
+            title = unquote(os.path.basename(url.split("?")[0])) or "file"
+            write_readme(folder, title, url, "Direct Download", extra=extra, hashes=hashes)
             return folder
 
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -580,7 +648,8 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
             savings[final_files[0].name] = label
 
     write_metadata(str(folder), url, "direct", crc32=crc_info)
-    write_readme(str(folder), base_name, url, "Direct Download", hashes=crc_info, savings=savings)
+    extra = {"Downloaded": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
+    write_readme(str(folder), base_name, url, "Direct Download", extra=extra, hashes=crc_info, savings=savings)
     if use_lfs:
         process_lfs_assets(str(folder))
 
@@ -610,11 +679,42 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
 
     state = load_state()
 
-    # Incremental skip
+    # Incremental skip – still update README with fresh "Downloaded" time
     if repo in state.get("repos", {}) and state["repos"][repo].get("tag") == tag:
         prev_folder = state["repos"][repo].get("folder")
         if prev_folder and os.path.exists(prev_folder):
-            log(f"✅ Release {tag} already mirrored, skipping.")
+            log(f"✅ Release {tag} already mirrored, updating timestamp.")
+            meta_path = os.path.join(prev_folder, "metadata.json")
+            extra = {}
+            hashes = {}
+            if os.path.exists(meta_path):
+                with open(meta_path) as f:
+                    meta = json.load(f)
+                hashes = meta.get("crc32", {})
+                rel_date = meta.get("release_date", "N/A")
+                if rel_date and rel_date != "N/A":
+                    try:
+                        dt = datetime.fromisoformat(rel_date.replace('Z', '+00:00'))
+                        ago = datetime.now(timezone.utc) - dt
+                        if ago.days > 0:
+                            ago_str = f"{ago.days} day{'s' if ago.days>1 else ''} ago"
+                        else:
+                            secs = ago.seconds
+                            ago_str = f"{secs//3600} hr ago" if secs >= 3600 else f"{secs//60} min ago"
+                        release_date_str = f"{dt.strftime('%Y-%m-%d %H:%M UTC')} ({ago_str})"
+                    except Exception:
+                        release_date_str = rel_date
+                else:
+                    release_date_str = "N/A"
+                extra = {
+                    "Downloaded": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'),
+                    "Release Date": release_date_str,
+                    "Total Size": human_size(meta.get("total_size", 0)),
+                    "Release Name": meta.get("release_name", ""),
+                    "Tag": tag,
+                }
+            write_readme(prev_folder, repo, f"https://github.com/{repo}/releases/tag/{tag}",
+                         "GitHub Release", extra=extra, hashes=hashes)
             return prev_folder, repo, tag
 
     # Clean up old
@@ -697,14 +797,15 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
             else:
                 secs = ago.seconds
                 ago_str = f"{secs//3600} hr ago" if secs >= 3600 else f"{secs//60} min ago"
-            rel_str = f"{dt.strftime('%Y-%m-%d %H:%M UTC')} ({ago_str})"
+            release_date_str = f"{dt.strftime('%Y-%m-%d %H:%M UTC')} ({ago_str})"
         except Exception:
-            rel_str = rel_date
+            release_date_str = rel_date
     else:
-        rel_str = "N/A"
+        release_date_str = "N/A"
 
     extra = {
-        "Release Date": rel_str,
+        "Downloaded": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'),
+        "Release Date": release_date_str,
         "Total Size": human_size(total_size),
         "Release Name": release_name,
         "Tag": tag,
@@ -727,8 +828,17 @@ def range_download(url, start, end, base_dir):
         folder = Path(state["ranges"][url]["folder"])
         if folder.exists():
             log(f"♻️  Reusing range folder: {folder}")
-        else:
-            folder = None
+            # Update timestamp
+            meta_path = os.path.join(str(folder), "metadata.json")
+            hashes = {}
+            if os.path.exists(meta_path):
+                with open(meta_path) as f:
+                    meta = json.load(f)
+                hashes = meta.get("crc32", {})
+            extra = {"Downloaded": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
+            title = folder.name.rsplit('_', 1)[0]
+            write_readme(str(folder), title, url, "Direct Chunked", extra=extra, hashes=hashes)
+            return str(folder)
     if not folder:
         bname = unquote(os.path.basename(url.split("?")[0])).rsplit('.', 1)[0]
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -752,6 +862,7 @@ def range_download(url, start, end, base_dir):
 
     write_metadata(str(folder), url, "direct_chunked", crc32=crc_info)
     title = folder.name.rsplit('_', 1)[0]
+    extra = {"Downloaded": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
     readme = (
         f"# {title}\n\n"
         f"| Property | Value |\n|--- |---|\n"
