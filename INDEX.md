@@ -2,25 +2,6 @@
 
 ---
 
-# 2dust/v2rayNG
-
-| Property | Value |
-|--- |---|
-| **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.5 |
-| **Release Date** | 2026-05-03 12:28 UTC (4 days ago) |
-| **Total Size** | 119.6 MB |
-| **Release Name** | 2.1.5 |
-| **Tag** | 2.1.5 |
-
-<details><summary>Files</summary>
-
-- [`v2rayNG_2.1.5-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.5_2.1.5%2Fv2rayNG_2.1.5-fdroid_universal.zip) (59.8 MB) `(CRC32: 31ff41bc)` (-3.3%)
-- [`v2rayNG_2.1.5_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.5_2.1.5%2Fv2rayNG_2.1.5_universal.zip) (59.8 MB) `(CRC32: 6babbaae)` (-3.3%)
-
-</details>
-
----
-
 # imputnet/helium-windows
 
 | Property | Value |
@@ -161,6 +142,25 @@
 - [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-linux-64_split.zip) (20.6 MB) `(CRC32: afff637b)` (-82.8%)
 - [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: 5a1e9935)`
 - [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-windows-64_split.zip) (51.7 MB) `(CRC32: 85e91444)` (-65.7%)
+
+</details>
+
+---
+
+# 2dust/v2rayNG
+
+| Property | Value |
+|--- |---|
+| **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.6 |
+| **Release Date** | 2026-05-09 03:48 UTC (9 hr ago) |
+| **Total Size** | 119.6 MB |
+| **Release Name** | 2.1.6 |
+| **Tag** | 2.1.6 |
+
+<details><summary>Files</summary>
+
+- [`v2rayNG_2.1.6-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.6_2.1.6%2Fv2rayNG_2.1.6-fdroid_universal.zip) (59.8 MB) `(CRC32: 648a2a8b)` (-3.3%)
+- [`v2rayNG_2.1.6_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.6_2.1.6%2Fv2rayNG_2.1.6_universal.zip) (59.8 MB) `(CRC32: 24df9e55)` (-3.3%)
 
 </details>
 
