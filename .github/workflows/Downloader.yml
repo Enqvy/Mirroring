@@ -14,23 +14,27 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Fast blobless checkout
+      - name: Fetch required files without cloning
         run: |
-          git clone --depth=1 --filter=blob:none --single-branch --no-checkout \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" .
-          git sparse-checkout init --cone
-          git sparse-checkout set scripts/ .github/workflows/ repo.txt state.json INDEX.md
-          git checkout
-          git sparse-checkout add downloads/ repos/
-          mkdir -p downloads repos
+          mkdir -p scripts downloads repos
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          REPO="${{ github.repository }}"
+          BRANCH="main"
+          for f in scripts/download_manager.py \
+                   scripts/push_to_github.py \
+                   repo.txt state.json INDEX.md; do
+            curl -sSfL -H "Authorization: token $TOKEN" \
+              "https://raw.githubusercontent.com/$REPO/$BRANCH/$f" -o "$f" 2>/dev/null || \
+              touch "$f"
+          done
 
-      - name: Save original commit message (push events only)
+      - name: Get last commit message (push events)
         if: github.event_name == 'push'
         run: |
-          ORIG_MSG=$(git log -1 --pretty=%B)
-          echo "ORIGINAL_COMMIT_MESSAGE<<EOF" >> $GITHUB_ENV
-          echo "$ORIG_MSG" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          MSG=$(curl -sSfL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits?per_page=1" \
+            | jq -r '.[0].commit.message')
+          echo "ORIGINAL_COMMIT_MESSAGE=$MSG" >> $GITHUB_ENV
 
       - name: Cache pip packages
         uses: actions/cache@v4
@@ -40,27 +44,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
-
       - name: Install dependencies
         run: |
-          # Restore cached apt packages so they aren't re‑downloaded
-          if [ -d /var/cache/apt/archives ]; then
-            sudo mv /var/cache/apt/archives /var/cache/apt/archives_backup
-            sudo mkdir -p /var/cache/apt/archives
-            sudo apt-get update -qq
-            sudo mv /var/cache/apt/archives_backup/* /var/cache/apt/archives/ 2>/dev/null || true
-            sudo rm -rf /var/cache/apt/archives_backup
-          else
-            sudo apt-get update -qq
-          fi
-          sudo apt-get install -y -qq aria2 p7zip-full
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq aria2 zip unzip jq
           pip install --quiet requests psutil tqdm
 
       - name: Update repos from repo.txt
@@ -75,32 +62,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and push all downloads
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A state.json downloads/ repos/ INDEX.md
-          if git diff-index --quiet --cached HEAD --; then
-            echo "Nothing to commit."
-            exit 0
-          fi
-          git commit -m "Sync downloads [skip ci]"
-          
-          MAX_RETRIES=3
-          RETRY_COUNT=0
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if git push origin main; then
-              echo "Push successful"
-              exit 0
-            fi
-            
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            echo "Push failed, attempt $RETRY_COUNT of $MAX_RETRIES"
-            
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              git pull --rebase origin main
-            fi
-          done
-          
-          echo "Failed to push after $MAX_RETRIES attempts"
-          exit 1
+      - name: Push changes directly via GitHub API
+        if: always()
+        run: python3 scripts/push_to_github.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
