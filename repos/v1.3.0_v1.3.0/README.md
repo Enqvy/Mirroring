@@ -3,7 +3,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/ThisIsDara/mhr-cfw-go/releases/tag/v1.3.0 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
+| **Downloaded** | 2026-05-10 02:48 UTC |
 | **Release Date** | 2026-05-08 04:17 UTC (1 day ago) |
 | **Total Size** | 19.7 MB |
 | **Release Name** |  |

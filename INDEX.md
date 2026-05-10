@@ -7,8 +7,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/imputnet/helium-windows/releases/tag/0.12.1.1 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
-| **Release Date** | 2026-05-05 23:40 UTC (3 days ago) |
+| **Downloaded** | 2026-05-10 02:48 UTC |
+| **Release Date** | 2026-05-05 23:40 UTC (4 days ago) |
 | **Total Size** | 110.8 MB |
 | **Release Name** |  |
 | **Tag** | 0.12.1.1 |
@@ -27,7 +27,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/Chocolate4U/Iran-v2ray-rules/releases/tag/202604280714 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
+| **Downloaded** | 2026-05-10 02:48 UTC |
 | **Release Date** | 2026-04-28 07:17 UTC (11 days ago) |
 | **Total Size** | 39.9 MB |
 | **Release Name** |  |
@@ -56,7 +56,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/ThisIsDara/mhr-cfw-go/releases/tag/v1.3.0 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
+| **Downloaded** | 2026-05-10 02:48 UTC |
 | **Release Date** | 2026-05-08 04:17 UTC (1 day ago) |
 | **Total Size** | 19.7 MB |
 | **Release Name** |  |
@@ -81,7 +81,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/tag/v1.9.18 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
+| **Downloaded** | 2026-05-10 02:48 UTC |
 | **Release Date** | 2026-05-08 03:15 UTC (1 day ago) |
 | **Total Size** | 131.4 MB |
 | **Release Name** |  |
@@ -110,33 +110,12 @@
 
 ---
 
-# ajavadinezhad/zyrln
-
-| Property | Value |
-|--- |---|
-| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre3 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
-| **Release Date** | 2026-05-08 05:28 UTC (1 day ago) |
-| **Total Size** | 33.4 MB |
-| **Release Name** |  |
-| **Tag** | v1.5.1-pre3 |
-
-<details><summary>Files</summary>
-
-- [`zyrln-1.5.1.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre3_v1.5.1-pre3%2Fzyrln-1.5.1.zip) (22.0 MB) `(CRC32: f0b7f581)`
-- [`zyrln-linux-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre3_v1.5.1-pre3%2Fzyrln-linux-amd64.zip) (5.7 MB) `(CRC32: d96500e9)`
-- [`zyrln-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2FZyrln%20v1.5.1-pre3_v1.5.1-pre3%2Fzyrln-windows-amd64.zip) (5.7 MB) `(CRC32: 03a4750d)`
-
-</details>
-
----
-
 # 2dust/v2rayN
 
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.2 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
+| **Downloaded** | 2026-05-10 02:48 UTC |
 | **Release Date** | 2026-05-08 12:13 UTC (1 day ago) |
 | **Total Size** | 270.2 MB |
 | **Release Name** |  |
@@ -158,8 +137,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.6 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
-| **Release Date** | 2026-05-09 03:48 UTC (15 hr ago) |
+| **Downloaded** | 2026-05-10 02:48 UTC |
+| **Release Date** | 2026-05-09 03:48 UTC (22 hr ago) |
 | **Total Size** | 119.6 MB |
 | **Release Name** |  |
 | **Tag** | 2.1.6 |
@@ -168,6 +147,27 @@
 
 - [`v2rayNG_2.1.6-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.6_2.1.6%2Fv2rayNG_2.1.6-fdroid_universal.zip) (59.8 MB) `(CRC32: 648a2a8b)`
 - [`v2rayNG_2.1.6_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.6_2.1.6%2Fv2rayNG_2.1.6_universal.zip) (59.8 MB) `(CRC32: 24df9e55)`
+
+</details>
+
+---
+
+# ajavadinezhad/zyrln
+
+| Property | Value |
+|--- |---|
+| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre4 |
+| **Downloaded** | 2026-05-10 02:48 UTC |
+| **Release Date** | 2026-05-10 00:03 UTC (2 hr ago) |
+| **Total Size** | 33.7 MB |
+| **Release Name** | v1.5.1 pre-release 4 |
+| **Tag** | v1.5.1-pre4 |
+
+<details><summary>Files</summary>
+
+- [`zyrln-1.5.1-pre4-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.1-pre4-windows-amd64.zip) (5.8 MB) `(CRC32: 535cabb7)` (-43.9%)
+- [`zyrln-1.5.1-pre4.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.1-pre4.zip) (22.1 MB) `(CRC32: b826d828)` (-4.2%)
+- [`zyrln-1.5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.zip) (5.8 MB) `(CRC32: ec3f424c)` (-43.6%)
 
 </details>
 

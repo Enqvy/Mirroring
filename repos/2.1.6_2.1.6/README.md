@@ -3,8 +3,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.6 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
-| **Release Date** | 2026-05-09 03:48 UTC (15 hr ago) |
+| **Downloaded** | 2026-05-10 02:48 UTC |
+| **Release Date** | 2026-05-09 03:48 UTC (22 hr ago) |
 | **Total Size** | 119.6 MB |
 | **Release Name** |  |
 | **Tag** | 2.1.6 |

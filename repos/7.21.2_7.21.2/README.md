@@ -3,7 +3,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.2 |
-| **Downloaded** | 2026-05-09 19:04 UTC |
+| **Downloaded** | 2026-05-10 02:48 UTC |
 | **Release Date** | 2026-05-08 12:13 UTC (1 day ago) |
 | **Total Size** | 270.2 MB |
 | **Release Name** |  |
