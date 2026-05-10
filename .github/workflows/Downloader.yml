@@ -14,14 +14,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Fetch required files without cloning
+      - name: Fetch required files (no clone)
         run: |
           mkdir -p scripts downloads repos
           TOKEN="${{ secrets.GITHUB_TOKEN }}"
           REPO="${{ github.repository }}"
           BRANCH="main"
           for f in scripts/download_manager.py \
-                   scripts/push_to_github.py \
+                   scripts/push_via_git.py \
                    repo.txt state.json INDEX.md; do
             curl -sSfL -H "Authorization: token $TOKEN" \
               "https://raw.githubusercontent.com/$REPO/$BRANCH/$f" -o "$f" 2>/dev/null || \
@@ -62,8 +62,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push changes directly via GitHub API
+      - name: Push changes via bare clone + plumbing
         if: always()
-        run: python3 scripts/push_to_github.py
+        run: python3 scripts/push_via_git.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
