@@ -7,7 +7,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/imputnet/helium-windows/releases/tag/0.12.1.1 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
+| **Downloaded** | 2026-05-10 13:15 UTC |
 | **Release Date** | 2026-05-05 23:40 UTC (4 days ago) |
 | **Total Size** | 110.8 MB |
 | **Release Name** |  |
@@ -27,8 +27,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/Chocolate4U/Iran-v2ray-rules/releases/tag/202604280714 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-04-28 07:17 UTC (11 days ago) |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-04-28 07:17 UTC (12 days ago) |
 | **Total Size** | 39.9 MB |
 | **Release Name** |  |
 | **Tag** | 202604280714 |
@@ -56,8 +56,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/ThisIsDara/mhr-cfw-go/releases/tag/v1.3.0 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-05-08 04:17 UTC (1 day ago) |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-05-08 04:17 UTC (2 days ago) |
 | **Total Size** | 19.7 MB |
 | **Release Name** |  |
 | **Tag** | v1.3.0 |
@@ -81,8 +81,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/tag/v1.9.18 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-05-08 03:15 UTC (1 day ago) |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-05-08 03:15 UTC (2 days ago) |
 | **Total Size** | 131.4 MB |
 | **Release Name** |  |
 | **Tag** | v1.9.18 |
@@ -110,23 +110,44 @@
 
 ---
 
+# ajavadinezhad/zyrln
+
+| Property | Value |
+|--- |---|
+| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre4 |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-05-10 00:03 UTC (13 hr ago) |
+| **Total Size** | 33.7 MB |
+| **Release Name** |  |
+| **Tag** | v1.5.1-pre4 |
+
+<details><summary>Files</summary>
+
+- [`zyrln-1.5.1-pre4-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.1-pre4-windows-amd64.zip) (5.8 MB) `(CRC32: 535cabb7)`
+- [`zyrln-1.5.1-pre4.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.1-pre4.zip) (22.1 MB) `(CRC32: b826d828)`
+- [`zyrln-1.5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.zip) (5.8 MB) `(CRC32: ec3f424c)`
+
+</details>
+
+---
+
 # 2dust/v2rayN
 
 | Property | Value |
 |--- |---|
-| **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.2 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-05-08 12:13 UTC (1 day ago) |
+| **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.3 |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-05-10 10:00 UTC (3 hr ago) |
 | **Total Size** | 270.2 MB |
-| **Release Name** |  |
-| **Tag** | 7.21.2 |
+| **Release Name** | 7.21.3 |
+| **Tag** | 7.21.3 |
 
 <details><summary>Files</summary>
 
-- [`v2rayN-linux-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-linux-64_split.z01) (99.0 MB) `(CRC32: a8528832)`
-- [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-linux-64_split.zip) (20.6 MB) `(CRC32: afff637b)`
-- [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: 5a1e9935)`
-- [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.2_7.21.2%2Fv2rayN-windows-64_split.zip) (51.7 MB) `(CRC32: 85e91444)`
+- [`v2rayN-linux-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-linux-64_split.z01) (99.0 MB) `(CRC32: a222cefa)`
+- [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-linux-64_split.zip) (20.6 MB) `(CRC32: 4cbe9f88)` (-82.8%)
+- [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: 32710c6a)`
+- [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-windows-64_split.zip) (51.7 MB) `(CRC32: dc1eec8a)` (-65.7%)
 
 </details>
 
@@ -136,38 +157,17 @@
 
 | Property | Value |
 |--- |---|
-| **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.6 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-05-09 03:48 UTC (22 hr ago) |
-| **Total Size** | 119.6 MB |
-| **Release Name** |  |
-| **Tag** | 2.1.6 |
+| **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.7 |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-05-10 06:23 UTC (6 hr ago) |
+| **Total Size** | 119.7 MB |
+| **Release Name** | 2.1.7 |
+| **Tag** | 2.1.7 |
 
 <details><summary>Files</summary>
 
-- [`v2rayNG_2.1.6-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.6_2.1.6%2Fv2rayNG_2.1.6-fdroid_universal.zip) (59.8 MB) `(CRC32: 648a2a8b)`
-- [`v2rayNG_2.1.6_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.6_2.1.6%2Fv2rayNG_2.1.6_universal.zip) (59.8 MB) `(CRC32: 24df9e55)`
-
-</details>
-
----
-
-# ajavadinezhad/zyrln
-
-| Property | Value |
-|--- |---|
-| **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre4 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-05-10 00:03 UTC (2 hr ago) |
-| **Total Size** | 33.7 MB |
-| **Release Name** | v1.5.1 pre-release 4 |
-| **Tag** | v1.5.1-pre4 |
-
-<details><summary>Files</summary>
-
-- [`zyrln-1.5.1-pre4-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.1-pre4-windows-amd64.zip) (5.8 MB) `(CRC32: 535cabb7)` (-43.9%)
-- [`zyrln-1.5.1-pre4.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.1-pre4.zip) (22.1 MB) `(CRC32: b826d828)` (-4.2%)
-- [`zyrln-1.5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%204_v1.5.1-pre4%2Fzyrln-1.5.zip) (5.8 MB) `(CRC32: ec3f424c)` (-43.6%)
+- [`v2rayNG_2.1.7-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7-fdroid_universal.zip) (59.9 MB) `(CRC32: f4af4ac2)` (-3.3%)
+- [`v2rayNG_2.1.7_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7_universal.zip) (59.9 MB) `(CRC32: b785bbab)` (-3.3%)
 
 </details>
 

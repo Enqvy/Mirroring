@@ -3,8 +3,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/tag/v1.9.18 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-05-08 03:15 UTC (1 day ago) |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-05-08 03:15 UTC (2 days ago) |
 | **Total Size** | 131.4 MB |
 | **Release Name** |  |
 | **Tag** | v1.9.18 |

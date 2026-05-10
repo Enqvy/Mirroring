@@ -3,8 +3,8 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/Chocolate4U/Iran-v2ray-rules/releases/tag/202604280714 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
-| **Release Date** | 2026-04-28 07:17 UTC (11 days ago) |
+| **Downloaded** | 2026-05-10 13:15 UTC |
+| **Release Date** | 2026-04-28 07:17 UTC (12 days ago) |
 | **Total Size** | 39.9 MB |
 | **Release Name** |  |
 | **Tag** | 202604280714 |

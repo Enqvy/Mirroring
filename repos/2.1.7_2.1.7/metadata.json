@@ -1,0 +1,23 @@
+{
+  "url": "https://github.com/2dust/v2rayNG/releases/download/2.1.7/v2rayNG_2.1.7_universal.apk",
+  "method": "github_release",
+  "repo": "2dust/v2rayNG",
+  "tag": "2.1.7",
+  "assets": [
+    {
+      "name": "v2rayNG_2.1.7-fdroid_universal.apk",
+      "size": 64890663
+    },
+    {
+      "name": "v2rayNG_2.1.7_universal.apk",
+      "size": 64890179
+    }
+  ],
+  "crc32": {
+    "v2rayNG_2.1.7-fdroid_universal.zip": "f4af4ac2",
+    "v2rayNG_2.1.7_universal.zip": "b785bbab"
+  },
+  "total_size": 125519916,
+  "release_date": "2026-05-10T06:23:46Z",
+  "use_lfs": false
+}

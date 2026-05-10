@@ -3,7 +3,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/imputnet/helium-windows/releases/tag/0.12.1.1 |
-| **Downloaded** | 2026-05-10 02:48 UTC |
+| **Downloaded** | 2026-05-10 13:15 UTC |
 | **Release Date** | 2026-05-05 23:40 UTC (4 days ago) |
 | **Total Size** | 110.8 MB |
 | **Release Name** |  |
