@@ -7,17 +7,17 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/ajavadinezhad/zyrln/releases/tag/v1.5.1-pre5 |
-| **Downloaded** | 2026-05-11 09:51 UTC |
-| **Release Date** | 2026-05-11 06:07 UTC (3 hr ago) |
+| **Downloaded** | 2026-05-11 15:23 UTC |
+| **Release Date** | 2026-05-11 06:07 UTC (9 hr ago) |
 | **Total Size** | 30.3 MB |
 | **Release Name** | v1.5.1 pre-release 5 |
 | **Tag** | v1.5.1-pre5 |
 
 <details><summary>Files</summary>
 
-- [`zyrln-1.5.1-pre5-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%205_v1.5.1-pre5%2Fzyrln-1.5.1-pre5-windows-amd64.zip) (3.5 MB) `(CRC32: 3ec2a172)` (-56.0%)
-- [`zyrln-1.5.1-pre5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%205_v1.5.1-pre5%2Fzyrln-1.5.1-pre5.zip) (23.3 MB) `(CRC32: ba8553c3)` (-4.1%)
-- [`zyrln-1.5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%205_v1.5.1-pre5%2Fzyrln-1.5.zip) (3.4 MB) `(CRC32: 1b6e91f9)` (-55.7%)
+- [`zyrln-1.5.1-pre5-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%205_v1.5.1-pre5%2Fzyrln-1.5.1-pre5-windows-amd64.zip) (3.5 MB) `(CRC32: f3b3b6b8)` (-56.0%)
+- [`zyrln-1.5.1-pre5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%205_v1.5.1-pre5%2Fzyrln-1.5.1-pre5.zip) (23.3 MB) `(CRC32: 6581e383)` (-4.1%)
+- [`zyrln-1.5.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%205_v1.5.1-pre5%2Fzyrln-1.5.zip) (3.4 MB) `(CRC32: ffdf5077)` (-55.7%)
 
 </details>
 
@@ -27,31 +27,31 @@
 
 | Property | Value |
 |--- |---|
-| **URL** | https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/tag/v1.9.21 |
-| **Downloaded** | 2026-05-11 09:51 UTC |
-| **Release Date** | 2026-05-11 00:01 UTC (9 hr ago) |
-| **Total Size** | 130.2 MB |
-| **Release Name** | v1.9.21 |
-| **Tag** | v1.9.21 |
+| **URL** | https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/tag/v1.9.22 |
+| **Downloaded** | 2026-05-11 15:23 UTC |
+| **Release Date** | 2026-05-11 13:24 UTC (1 hr ago) |
+| **Total Size** | 129.1 MB |
+| **Release Name** | v1.9.22 |
+| **Tag** | v1.9.22 |
 
 <details><summary>Files</summary>
 
-- [`mhrv-rs-android-arm64-v8a-v1.9.21.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-android-arm64-v8a-v1.9.21.zip) (13.6 MB) `(CRC32: fe4b842b)` (-26.9%)
-- [`mhrv-rs-android-armeabi-v7a-v1.9.21.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-android-armeabi-v7a-v1.9.21.zip) (13.1 MB) `(CRC32: 3f5deb31)` (-18.8%)
-- [`mhrv-rs-android-universal-v1.9.21.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-android-universal-v1.9.21.zip) (23.7 MB) `(CRC32: 628f202d)` (-42.3%)
-- [`mhrv-rs-android-x86-v1.9.21.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-android-x86-v1.9.21.zip) (13.8 MB) `(CRC32: 3629a482)` (-28.5%)
-- [`mhrv-rs-android-x86_64-v1.9.21.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-android-x86_64-v1.9.21.zip) (13.8 MB) `(CRC32: ddcbcc82)` (-29.7%)
-- [`mhrv-rs-linux-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-linux-amd64.tar.zip) (9.8 MB) `(CRC32: 1fefe0ae)` (-0.2%)
-- [`mhrv-rs-linux-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-linux-arm64.tar.zip) (2.1 MB) `(CRC32: 78d84a5a)` (-0.1%)
-- [`mhrv-rs-linux-musl-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-linux-musl-amd64.tar.zip) (2.4 MB) `(CRC32: ffc2aadf)` (-0.1%)
-- [`mhrv-rs-linux-musl-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-linux-musl-arm64.tar.zip) (2.2 MB) `(CRC32: 9fa60745)` (-0.1%)
-- [`mhrv-rs-macos-amd64-app.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-macos-amd64-app.zip) (5.1 MB) `(CRC32: 8d91df64)` (0.0%)
-- [`mhrv-rs-macos-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-macos-amd64.tar.zip) (7.2 MB) `(CRC32: 2a77fda7)` (-0.0%)
-- [`mhrv-rs-macos-arm64-app.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-macos-arm64-app.zip) (4.7 MB) `(CRC32: 247ba09b)` (0.0%)
-- [`mhrv-rs-macos-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-macos-arm64.tar.zip) (6.6 MB) `(CRC32: 87ed73f6)` (-0.1%)
-- [`mhrv-rs-openwrt-mipsel-softfloat.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-openwrt-mipsel-softfloat.tar.zip) (2.3 MB) `(CRC32: 0f2cc189)` (-0.3%)
-- [`mhrv-rs-raspbian-armhf.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-raspbian-armhf.tar.zip) (2.1 MB) `(CRC32: b5007885)` (-0.3%)
-- [`mhrv-rs-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.21_v1.9.21%2Fmhrv-rs-windows-amd64.zip) (7.6 MB) `(CRC32: ffa7d56e)` (0.0%)
+- [`mhrv-rs-android-arm64-v8a-v1.9.22.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-android-arm64-v8a-v1.9.22.zip) (13.6 MB) `(CRC32: f5df9dd9)` (-26.9%)
+- [`mhrv-rs-android-armeabi-v7a-v1.9.22.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-android-armeabi-v7a-v1.9.22.zip) (13.1 MB) `(CRC32: d91dd357)` (-18.8%)
+- [`mhrv-rs-android-universal-v1.9.22.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-android-universal-v1.9.22.zip) (23.7 MB) `(CRC32: 1b16b8b1)` (-42.3%)
+- [`mhrv-rs-android-x86-v1.9.22.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-android-x86-v1.9.22.zip) (13.8 MB) `(CRC32: 72f2318c)` (-28.5%)
+- [`mhrv-rs-android-x86_64-v1.9.22.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-android-x86_64-v1.9.22.zip) (13.8 MB) `(CRC32: 581f2806)` (-29.7%)
+- [`mhrv-rs-linux-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-linux-amd64.tar.zip) (9.6 MB) `(CRC32: 378c58d2)` (-0.2%)
+- [`mhrv-rs-linux-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-linux-arm64.tar.zip) (2.1 MB) `(CRC32: f14209eb)` (-0.1%)
+- [`mhrv-rs-linux-musl-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-linux-musl-amd64.tar.zip) (2.3 MB) `(CRC32: 44722cd7)` (-0.1%)
+- [`mhrv-rs-linux-musl-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-linux-musl-arm64.tar.zip) (2.1 MB) `(CRC32: e8cfa290)` (-0.1%)
+- [`mhrv-rs-macos-amd64-app.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-macos-amd64-app.zip) (5.0 MB) `(CRC32: 5a254324)` (0.0%)
+- [`mhrv-rs-macos-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-macos-amd64.tar.zip) (7.1 MB) `(CRC32: 8f565cbf)` (-0.0%)
+- [`mhrv-rs-macos-arm64-app.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-macos-arm64-app.zip) (4.6 MB) `(CRC32: 8ad3099e)` (0.0%)
+- [`mhrv-rs-macos-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-macos-arm64.tar.zip) (6.5 MB) `(CRC32: 9b274510)` (-0.1%)
+- [`mhrv-rs-openwrt-mipsel-softfloat.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-openwrt-mipsel-softfloat.tar.zip) (2.2 MB) `(CRC32: ceadf818)` (-0.3%)
+- [`mhrv-rs-raspbian-armhf.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-raspbian-armhf.tar.zip) (2.0 MB) `(CRC32: 479015d0)` (-0.3%)
+- [`mhrv-rs-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.22_v1.9.22%2Fmhrv-rs-windows-amd64.zip) (7.5 MB) `(CRC32: 9e3115d4)` (0.0%)
 
 </details>
 
@@ -62,18 +62,18 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/2dust/v2rayN/releases/tag/7.21.3 |
-| **Downloaded** | 2026-05-11 09:51 UTC |
-| **Release Date** | 2026-05-10 10:00 UTC (23 hr ago) |
+| **Downloaded** | 2026-05-11 15:23 UTC |
+| **Release Date** | 2026-05-10 10:00 UTC (1 day ago) |
 | **Total Size** | 270.2 MB |
 | **Release Name** | 7.21.3 |
 | **Tag** | 7.21.3 |
 
 <details><summary>Files</summary>
 
-- [`v2rayN-linux-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-linux-64_split.z01) (99.0 MB) `(CRC32: 202bcedd)`
-- [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-linux-64_split.zip) (20.6 MB) `(CRC32: aa6da4e0)` (-82.8%)
-- [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: ea2918a7)`
-- [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-windows-64_split.zip) (51.7 MB) `(CRC32: eddff51b)` (-65.7%)
+- [`v2rayN-linux-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-linux-64_split.z01) (99.0 MB) `(CRC32: 3294d5f1)`
+- [`v2rayN-linux-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-linux-64_split.zip) (20.6 MB) `(CRC32: cacc0ab9)` (-82.8%)
+- [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-windows-64_split.z01) (99.0 MB) `(CRC32: 7787f33e)`
+- [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.21.3_7.21.3%2Fv2rayN-windows-64_split.zip) (51.7 MB) `(CRC32: 0b1ec70b)` (-65.7%)
 
 </details>
 
@@ -84,7 +84,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/2dust/v2rayNG/releases/tag/2.1.7 |
-| **Downloaded** | 2026-05-11 09:51 UTC |
+| **Downloaded** | 2026-05-11 15:23 UTC |
 | **Release Date** | 2026-05-10 06:23 UTC (1 day ago) |
 | **Total Size** | 119.6 MB |
 | **Release Name** | 2.1.7 |
@@ -92,8 +92,8 @@
 
 <details><summary>Files</summary>
 
-- [`v2rayNG_2.1.7-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7-fdroid_universal.zip) (59.8 MB) `(CRC32: 4bb55060)` (-3.4%)
-- [`v2rayNG_2.1.7_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7_universal.zip) (59.8 MB) `(CRC32: 651d9da7)` (-3.4%)
+- [`v2rayNG_2.1.7-fdroid_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7-fdroid_universal.zip) (59.8 MB) `(CRC32: 97740d19)` (-3.4%)
+- [`v2rayNG_2.1.7_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7_universal.zip) (59.8 MB) `(CRC32: 5819f87d)` (-3.4%)
 
 </details>
 
@@ -104,7 +104,7 @@
 | Property | Value |
 |--- |---|
 | **URL** | https://github.com/Chocolate4U/Iran-v2ray-rules/releases/tag/202604280714 |
-| **Downloaded** | 2026-05-11 09:51 UTC |
+| **Downloaded** | 2026-05-11 15:23 UTC |
 | **Release Date** | 2026-04-28 07:17 UTC (13 days ago) |
 | **Total Size** | 39.9 MB |
 | **Release Name** | 202604280714 |
