@@ -1,0 +1,28 @@
+{
+  "url": "https://github.com/ajavadinezhad/zyrln/releases/download/v1.5.1-pre4/zyrln-1.5.1-pre4.apk",
+  "method": "github_release",
+  "repo": "ajavadinezhad/zyrln",
+  "tag": "v1.5.1-pre4",
+  "assets": [
+    {
+      "name": "zyrln-1.5.1-pre4-linux-amd64",
+      "size": 10786677
+    },
+    {
+      "name": "zyrln-1.5.1-pre4-windows-amd64.exe",
+      "size": 10869760
+    },
+    {
+      "name": "zyrln-1.5.1-pre4.apk",
+      "size": 24300664
+    }
+  ],
+  "crc32": {
+    "zyrln-1.5.1-pre4.zip": "9e794268",
+    "zyrln-1.5.zip": "50055e2c",
+    "zyrln-1.5.1-pre4-windows-amd64.zip": "38bb9ae8"
+  },
+  "total_size": 35032109,
+  "release_date": "2026-05-10T00:03:59Z",
+  "use_lfs": false
+}

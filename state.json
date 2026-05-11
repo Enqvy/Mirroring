@@ -1,5 +1,17 @@
 {
   "repos": {
+    "ajavadinezhad/zyrln": {
+      "folder": "repos/v1.5.1 pre-release 4_v1.5.1-pre4",
+      "tag": "v1.5.1-pre4"
+    },
+    "therealaleph/MasterHttpRelayVPN-RUST": {
+      "folder": "repos/v1.9.21_v1.9.21",
+      "tag": "v1.9.21"
+    },
+    "2dust/v2rayNG": {
+      "folder": "repos/2.1.7_2.1.7",
+      "tag": "2.1.7"
+    },
     "imputnet/helium-windows": {
       "folder": "repos/0.12.1.1_0.12.1.1",
       "tag": "0.12.1.1"
@@ -7,26 +19,6 @@
     "Chocolate4U/Iran-v2ray-rules": {
       "folder": "repos/202604280714_202604280714",
       "tag": "202604280714"
-    },
-    "ThisIsDara/mhr-cfw-go": {
-      "folder": "repos/v1.3.0_v1.3.0",
-      "tag": "v1.3.0"
-    },
-    "therealaleph/MasterHttpRelayVPN-RUST": {
-      "folder": "repos/v1.9.18_v1.9.18",
-      "tag": "v1.9.18"
-    },
-    "ajavadinezhad/zyrln": {
-      "folder": "repos/v1.5.1 pre-release 4_v1.5.1-pre4",
-      "tag": "v1.5.1-pre4"
-    },
-    "2dust/v2rayN": {
-      "folder": "repos/7.21.3_7.21.3",
-      "tag": "7.21.3"
-    },
-    "2dust/v2rayNG": {
-      "folder": "repos/2.1.7_2.1.7",
-      "tag": "2.1.7"
     }
   },
   "downloads": {},

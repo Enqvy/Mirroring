@@ -1,0 +1,19 @@
+{
+  "url": "https://github.com/imputnet/helium-windows/releases/download/0.12.1.1/helium_0.12.1.1_x64-installer.exe",
+  "method": "github_release",
+  "repo": "imputnet/helium-windows",
+  "tag": "0.12.1.1",
+  "assets": [
+    {
+      "name": "helium_0.12.1.1_x64-installer.exe",
+      "size": 119471128
+    }
+  ],
+  "crc32": {
+    "helium_0.12.1.1_x64-installer_split.zip": "c29fab3c",
+    "helium_0.12.1.1_x64-installer_split.z01": "68fdc084"
+  },
+  "total_size": 116049807,
+  "release_date": "2026-05-05T23:40:44Z",
+  "use_lfs": false
+}
