@@ -1,5 +1,4 @@
 # VPN apps
-ThisIsDara/mhr-cfw-go [all,pre]
 ajavadinezhad/zyrln [all,pre]
 therealaleph/MasterHttpRelayVPN-RUST [all,pre]
 
