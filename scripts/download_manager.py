@@ -137,11 +137,15 @@ def crc32_file(path):
     return format(prev & 0xFFFFFFFF, '08x')
 
 def load_state():
-    if os.path.exists(STATE_FILE):
+    if not os.path.exists(STATE_FILE) or os.path.getsize(STATE_FILE) == 0:
+        log("📄 No state.json or empty – starting fresh")
+        return {"repos": {}, "downloads": {}, "ranges": {}}
+    try:
         with open(STATE_FILE) as f:
             return json.load(f)
-    log("📄 No state.json – starting fresh")
-    return {"repos": {}, "downloads": {}, "ranges": {}}
+    except json.JSONDecodeError:
+        log("⚠️  state.json corrupted – starting fresh")
+        return {"repos": {}, "downloads": {}, "ranges": {}}
 
 def save_state(state):
     with open(STATE_FILE, "w") as f:
