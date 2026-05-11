@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 0,12 * * *'
+    - cron: '0 0,6,12,18 * * *'
 
 concurrency: download-${{ github.ref }}
 
@@ -20,9 +20,7 @@ jobs:
           TOKEN="${{ secrets.GITHUB_TOKEN }}"
           REPO="${{ github.repository }}"
           BRANCH="main"
-          for f in scripts/download_manager.py \
-                   scripts/push_via_git.py \
-                   repo.txt state.json INDEX.md; do
+          for f in scripts/download_manager.py repo.txt state.json INDEX.md; do
             curl -sSfL -H "Authorization: token $TOKEN" \
               "https://raw.githubusercontent.com/$REPO/$BRANCH/$f" -o "$f" 2>/dev/null || \
               touch "$f"
@@ -64,6 +62,86 @@ jobs:
 
       - name: Push changes via bare clone + plumbing
         if: always()
-        run: python3 scripts/push_via_git.py
+        run: |
+          cat > push_via_git.py <<'PYEOF'
+          import os, sys, subprocess, shutil, tempfile, pathlib
+
+          TOKEN = os.environ["GITHUB_TOKEN"]
+          REPO = os.environ["GITHUB_REPOSITORY"]
+          REPO_URL = f"https://x-access-token:{TOKEN}@github.com/{REPO}.git"
+
+          def run(cmd, check=True, **kwargs):
+              proc = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
+              if check and proc.returncode != 0:
+                  print(f"Error running {' '.join(cmd)}: {proc.stderr}")
+                  sys.exit(1)
+              return proc.stdout.strip()
+
+          def main():
+              tmpdir = tempfile.mkdtemp()
+              clone_dir = os.path.join(tmpdir, "repo.git")
+              try:
+                  print("Cloning bare repository (metadata only)...")
+                  run(["git", "clone", "--bare", "--depth=1", "--filter=blob:none", REPO_URL, clone_dir])
+                  os.environ["GIT_DIR"] = clone_dir
+
+                  # Required for commit-tree
+                  os.environ["GIT_AUTHOR_NAME"] = "github-actions[bot]"
+                  os.environ["GIT_AUTHOR_EMAIL"] = "github-actions[bot]@users.noreply.github.com"
+                  os.environ["GIT_COMMITTER_NAME"] = "github-actions[bot]"
+                  os.environ["GIT_COMMITTER_EMAIL"] = "github-actions[bot]@users.noreply.github.com"
+
+                  index_file = os.path.join(tmpdir, "index.tmp")
+                  os.environ["GIT_INDEX_FILE"] = index_file
+
+                  run(["git", "read-tree", "main"])
+
+                  for path in ["downloads", "repos", "state.json", "INDEX.md"]:
+                      run(["git", "rm", "--cached", "-r", "--quiet", "--", path], check=False)
+
+                  files_to_add = []
+                  for dirpath, _, filenames in os.walk("downloads"):
+                      for fname in filenames:
+                          if fname == ".gitkeep":
+                              continue
+                          files_to_add.append(os.path.join(dirpath, fname))
+                  for dirpath, _, filenames in os.walk("repos"):
+                      for fname in filenames:
+                          files_to_add.append(os.path.join(dirpath, fname))
+                  files_to_add.append("state.json")
+                  files_to_add.append("INDEX.md")
+
+                  added = False
+                  for fpath in files_to_add:
+                      if not os.path.exists(fpath):
+                          continue
+                      sha = run(["git", "hash-object", "-w", fpath])
+                      rel_path = pathlib.Path(fpath).as_posix()
+                      run(["git", "update-index", "--add", "--cacheinfo", "100644", sha, rel_path])
+                      added = True
+
+                  if not added:
+                      print("No files to add.")
+                      return
+
+                  new_tree = run(["git", "write-tree"])
+                  print(f"New tree: {new_tree}")
+
+                  parent_commit = run(["git", "rev-parse", "main"])
+                  new_commit = run(["git", "commit-tree", "-p", parent_commit, "-m", "Sync downloads [skip ci]", new_tree])
+                  print(f"New commit: {new_commit}")
+
+                  run(["git", "update-ref", "refs/heads/main", new_commit])
+                  run(["git", "push", "origin", "main"])
+                  print("Push successful.")
+
+              finally:
+                  shutil.rmtree(tmpdir, ignore_errors=True)
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+
+          python3 push_via_git.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
