@@ -3,7 +3,7 @@ ajavadinezhad/zyrln [all,pre]
 therealaleph/MasterHttpRelayVPN-RUST [all,pre]
 
 # v2rayN - Windows & Linux (64-bit)
-2dust/v2rayN [*v2rayN-windows-64.zip, *v2rayN-linux-64.zip]
+2dust/v2rayN [*v2rayN-windows-64.zip, *v2rayN-linux-64.zip, pre]
 
 # v2rayNG - Android Universal
 2dust/v2rayNG [+!*fdroid*, v2rayNG_*_universal.apk, pre]
