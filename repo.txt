@@ -8,8 +8,5 @@ therealaleph/MasterHttpRelayVPN-RUST [all,pre]
 # v2rayNG - Android Universal
 2dust/v2rayNG [+!*fdroid*, v2rayNG_*_universal.apk, pre]
 
-# Windows tools
-imputnet/helium-windows [helium_*_x64-installer.exe,pre]
-
 # Rules & configs (no compression - keep raw)
 Chocolate4U/Iran-v2ray-rules [all,nocompress,pre]
