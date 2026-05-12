@@ -1,0 +1,9 @@
+{
+  "url": "https://cfdownload.adobe.com/pub/adobe/coldfusion/java/java8/java8u431/jdk/jdk-8u431-windows-x64.exe",
+  "method": "direct",
+  "crc32": {
+    "jdk-8u431-windows-x64_split.z01": "84b8d58f",
+    "jdk-8u431-windows-x64_split.zip": "ee335570"
+  },
+  "downloaded": "2026-05-12T22:08:16.046783+00:00"
+}

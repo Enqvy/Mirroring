@@ -7,7 +7,7 @@
         {
           "name": "zyrln-1.5.1-pre6-windows-amd64.zip",
           "size": 6389164,
-          "crc32": "b6d39bc9",
+          "crc32": "b7355e61",
           "path": "repos/v1.5.1 pre-release 6_v1.5.1-pre6/zyrln-1.5.1-pre6-windows-amd64.zip"
         },
         {
@@ -19,7 +19,7 @@
         {
           "name": "zyrln-1.5.1-pre6.zip",
           "size": 24466562,
-          "crc32": "3568823d",
+          "crc32": "2d36ec08",
           "path": "repos/v1.5.1 pre-release 6_v1.5.1-pre6/zyrln-1.5.1-pre6.zip"
         }
       ],
@@ -55,7 +55,7 @@
         {
           "name": "mhrv-rs-linux-musl-arm64.tar.zip",
           "size": 2232090,
-          "crc32": "f96555a7",
+          "crc32": "6155ec0b",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-linux-musl-arm64.tar.zip"
         },
         {
@@ -67,25 +67,25 @@
         {
           "name": "mhrv-rs-linux-musl-amd64.tar.zip",
           "size": 2416532,
-          "crc32": "570013f4",
+          "crc32": "de5fc44a",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-linux-musl-amd64.tar.zip"
         },
         {
           "name": "mhrv-rs-android-universal-v1.9.23.zip",
           "size": 24930763,
-          "crc32": "eacb8054",
+          "crc32": "a76eda88",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-android-universal-v1.9.23.zip"
         },
         {
           "name": "mhrv-rs-macos-amd64.tar.zip",
           "size": 7475608,
-          "crc32": "29be6f9b",
+          "crc32": "999e648b",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-macos-amd64.tar.zip"
         },
         {
           "name": "mhrv-rs-android-x86_64-v1.9.23.zip",
           "size": 14464893,
-          "crc32": "c36c4bf4",
+          "crc32": "efe479ba",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-android-x86_64-v1.9.23.zip"
         },
         {
@@ -97,37 +97,37 @@
         {
           "name": "mhrv-rs-android-arm64-v8a-v1.9.23.zip",
           "size": 14276514,
-          "crc32": "cfd94067",
+          "crc32": "8fc5c48b",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-android-arm64-v8a-v1.9.23.zip"
         },
         {
           "name": "mhrv-rs-macos-arm64.tar.zip",
           "size": 6859989,
-          "crc32": "b6b0cd54",
+          "crc32": "541030b8",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-macos-arm64.tar.zip"
         },
         {
           "name": "mhrv-rs-linux-amd64.tar.zip",
           "size": 10135229,
-          "crc32": "01de3b44",
+          "crc32": "77a7dcc9",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-linux-amd64.tar.zip"
         },
         {
           "name": "mhrv-rs-linux-arm64.tar.zip",
           "size": 2185548,
-          "crc32": "b485de6e",
+          "crc32": "d3ee0b6a",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-linux-arm64.tar.zip"
         },
         {
           "name": "mhrv-rs-openwrt-mipsel-softfloat.tar.zip",
           "size": 2341737,
-          "crc32": "201211f1",
+          "crc32": "a01e0110",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-openwrt-mipsel-softfloat.tar.zip"
         },
         {
           "name": "mhrv-rs-android-armeabi-v7a-v1.9.23.zip",
           "size": 13757792,
-          "crc32": "9fb1e202",
+          "crc32": "b0fce91c",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-android-armeabi-v7a-v1.9.23.zip"
         },
         {
@@ -139,13 +139,13 @@
         {
           "name": "mhrv-rs-android-x86-v1.9.23.zip",
           "size": 14529898,
-          "crc32": "7da307d3",
+          "crc32": "a6f490dd",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-android-x86-v1.9.23.zip"
         },
         {
           "name": "mhrv-rs-raspbian-armhf.tar.zip",
           "size": 2105484,
-          "crc32": "fb55b147",
+          "crc32": "e2352da6",
           "path": "repos/v1.9.23_v1.9.23/mhrv-rs-raspbian-armhf.tar.zip"
         }
       ],
@@ -225,7 +225,7 @@
         {
           "name": "v2rayNG_2.1.7_universal.zip",
           "size": 62712860,
-          "crc32": "01e92b23",
+          "crc32": "f3eb7d2a",
           "path": "repos/2.1.7_2.1.7/v2rayNG_2.1.7_universal.zip"
         }
       ],
@@ -359,6 +359,11 @@
       "method": "github_release"
     }
   },
-  "downloads": {},
+  "downloads": {
+    "https://cfdownload.adobe.com/pub/adobe/coldfusion/java/java8/java8u431/jdk/jdk-8u431-windows-x64.exe": {
+      "folder": "downloads/jdk-8u431-windows-x64.exe_20260512-220807",
+      "files": []
+    }
+  },
   "ranges": {}
 }
