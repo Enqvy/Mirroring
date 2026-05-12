@@ -279,7 +279,7 @@ def update_index_md(state):
     Path("INDEX.md").write_text("\n".join(content))
     log("📄 INDEX.md regenerated")
 
-# ── Filter parsing (unchanged from original, no bugs found) ──
+# ── Filter parsing (unchanged) ──
 def parse_filter(line):
     m = FILTER_PATTERN.match(line.strip())
     if not m:
@@ -331,30 +331,64 @@ def parse_filter(line):
     return repo, processed, no_compress, pre_release, use_lfs
 
 def asset_matches(name, filters):
+    """
+    Determine whether *name* (a file name) matches a list of filter patterns.
+
+    Patterns are now treated as **full regular expressions** (case‑insensitive).
+    - Patterns starting with '!' are negative: the file is rejected if the regex matches.
+    - The literal pattern ``all`` matches **everything** (still subject to negative patterns).
+    - If no positive patterns are given, everything is accepted unless a negative pattern matches.
+    - Invalid regex patterns are logged and treated as non‑matching.
+    """
     if not filters:
         return True
-    nl = name.lower()
+
+    nl = name.lower()  # matching is case‑insensitive, but we already compile with IGNORECASE
+
+    # Special handling for the "all" keyword
+    if "all" in filters:
+        # Check negatives first
+        for f in filters:
+            if f.startswith('!'):
+                try:
+                    if re.search(f[1:], nl, re.IGNORECASE):
+                        return False
+                except re.error:
+                    log(f"Invalid regex pattern: {f[1:]}", "WARN")
+                    return False
+        return True
+
+    negative_patterns = []
+    positive_patterns = []
+
     for f in filters:
         if f.startswith('!'):
-            pattern = f[1:]
-            if pattern.startswith('.'):
-                if nl.endswith(pattern.lower()):
-                    return False
-            else:
-                if fnmatch.fnmatch(nl, pattern.lower()):
-                    return False
-    if "all" in filters:
-        return True
-    inc = [f for f in filters if not f.startswith('!')]
-    if not inc:
-        return True
-    for f in inc:
-        if f.startswith('.'):
-            if nl.endswith(f.lower()):
-                return True
+            negative_patterns.append(f[1:])
         else:
-            if fnmatch.fnmatch(nl, f.lower()):
+            positive_patterns.append(f)
+
+    # Negative patterns – if any match, reject immediately
+    for pat in negative_patterns:
+        try:
+            if re.search(pat, nl, re.IGNORECASE):
+                return False
+        except re.error:
+            log(f"Invalid regex pattern: {pat}", "WARN")
+            return False
+
+    # If no positive patterns remain, accept everything
+    if not positive_patterns:
+        return True
+
+    # Positive patterns – at least one must match
+    for pat in positive_patterns:
+        try:
+            if re.search(pat, nl, re.IGNORECASE):
                 return True
+        except re.error:
+            log(f"Invalid regex pattern: {pat}", "WARN")
+            continue
+
     return False
 
 def is_skip_asset(name):
@@ -643,22 +677,34 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
             continue
         wanted.append((name, a.get("browser_download_url"), a.get("size")))
 
-    # Idempotency check
+    # ═══════════════════════════════════════════════════════════════
+    #   Idempotency check – improved to work without original_assets
+    # ═══════════════════════════════════════════════════════════════
     if existing and existing.get("tag") == tag:
-        stored_original = existing.get("original_assets", [])
-        if stored_original:
-            stored_set = {(a["name"], a["size"]) for a in stored_original}
-            wanted_set = {(w[0], w[2]) for w in wanted}
-            if stored_set == wanted_set:
-                prev_folder = existing["folder"]
-                if os.path.exists(prev_folder):
-                    # Verify all expected files actually exist
-                    if all(os.path.exists(os.path.join(prev_folder, f["name"]))
-                           for f in existing.get("files", [])):
-                        log(f"✅ Release {tag} already mirrored, nothing to do.")
-                        return prev_folder, repo, tag
+        prev_folder = existing.get("folder")
+        if prev_folder and os.path.exists(prev_folder):
+            # Get the set of file names currently on disk (excluding metadata)
+            existing_files = set(
+                f.name for f in Path(prev_folder).iterdir()
+                if f.is_file() and f.name not in ("README.md", "metadata.json")
+            )
+            wanted_names = {w[0] for w in wanted}
 
-    # Remove old version if exists
+            # 1) If we have original_assets, use strict check
+            stored_original = existing.get("original_assets", [])
+            if stored_original:
+                stored_set = {(a["name"], a["size"]) for a in stored_original}
+                wanted_set = {(w[0], w[2]) for w in wanted}
+                if stored_set == wanted_set and wanted_names.issubset(existing_files):
+                    log(f"✅ Release {tag} already mirrored, nothing to do.")
+                    return prev_folder, repo, tag
+            # 2) Fallback: no original_assets? Compare just the file names.
+            elif wanted_names.issubset(existing_files):
+                log(f"✅ Release {tag} already mirrored (name match), nothing to do.")
+                return prev_folder, repo, tag
+    # ═══════════════════════════════════════════════════════════════
+
+    # Remove old version if idempotency check failed
     if repo in state.get("repos", {}):
         old_folder = state["repos"][repo].get("folder")
         if old_folder and os.path.exists(old_folder):
