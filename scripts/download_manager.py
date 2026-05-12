@@ -93,16 +93,18 @@ def detect_mime(filepath):
         return None
 
 def fix_extension(filepath):
+    # Only fix files that have NO extension
+    if os.path.splitext(filepath)[1]:
+        return filepath
     mime = detect_mime(filepath)
     if not mime:
         return filepath
     ext = mimetypes.guess_extension(mime, strict=False)
-    if ext and ext != os.path.splitext(filepath)[1].lower():
-        new_path = os.path.splitext(filepath)[0] + ext
-        if new_path != filepath:
-            log(f"🔧 Fixing extension: {os.path.basename(filepath)} -> {os.path.basename(new_path)}")
-            os.rename(filepath, new_path)
-            return new_path
+    if ext:
+        new_path = filepath + ext
+        os.rename(filepath, new_path)
+        log(f"🔧 Added extension: {os.path.basename(filepath)} -> {os.path.basename(new_path)}")
+        return new_path
     return filepath
 
 # ------------------------------------------
