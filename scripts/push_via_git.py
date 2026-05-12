@@ -1,137 +1,105 @@
 #!/usr/bin/env python3
-import os, sys, subprocess, shutil, tempfile, pathlib
+import os, sys, pathlib, hashlib, requests
 
 TOKEN = os.environ["GITHUB_TOKEN"]
 REPO = os.environ["GITHUB_REPOSITORY"]
-REPO_URL = f"https://x-access-token:{TOKEN}@github.com/{REPO}.git"
+API_BASE = f"https://api.github.com/repos/{REPO}"
+HEADERS = {
+    "Authorization": f"token {TOKEN}",
+    "Accept": "application/vnd.github.v3+json",
+    "User-Agent": "MirrorBot/2.0",
+}
 
-MAX_BATCH_BYTES = 500 * 1024 * 1024   # 500 MB per commit
+def git_hash_object(path):
+    """Compute a Git blob SHA-1 without writing to a database."""
+    header = f"blob {os.path.getsize(path)}\0"
+    with open(path, "rb") as f:
+        content = f.read()
+    return hashlib.sha1(header.encode() + content).hexdigest()
 
-def run(cmd, check=True, **kwargs):
-    proc = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
-    if check and proc.returncode != 0:
-        print(f"Error running {' '.join(cmd)}: {proc.stderr}")
-        sys.exit(1)
-    return proc.stdout.strip()
+def upload_blob(path):
+    """Upload blob content via API, return SHA."""
+    with open(path, "rb") as f:
+        content = f.read()
+    # GitHub expects base64-encoded content
+    import base64
+    payload = {"content": base64.b64encode(content).decode(), "encoding": "base64"}
+    resp = requests.post(f"{API_BASE}/git/blobs", headers=HEADERS, json=payload)
+    resp.raise_for_status()
+    return resp.json()["sha"]
 
 def main():
-    tmpdir = tempfile.mkdtemp()
-    clone_dir = os.path.join(tmpdir, "repo.git")
-    try:
-        print("Cloning bare repository (metadata only)...")
-        run(["git", "clone", "--bare", "--depth=1", "--filter=blob:none", REPO_URL, clone_dir])
-        os.environ["GIT_DIR"] = clone_dir
+    # 1. Get the latest commit SHA and its tree SHA
+    ref_resp = requests.get(f"{API_BASE}/git/ref/heads/main", headers=HEADERS)
+    ref_resp.raise_for_status()
+    latest_commit_sha = ref_resp.json()["object"]["sha"]
 
-        os.environ["GIT_AUTHOR_NAME"] = "github-actions[bot]"
-        os.environ["GIT_AUTHOR_EMAIL"] = "github-actions[bot]@users.noreply.github.com"
-        os.environ["GIT_COMMITTER_NAME"] = "github-actions[bot]"
-        os.environ["GIT_COMMITTER_EMAIL"] = "github-actions[bot]@users.noreply.github.com"
+    commit_resp = requests.get(f"{API_BASE}/git/commits/{latest_commit_sha}", headers=HEADERS)
+    commit_resp.raise_for_status()
+    base_tree_sha = commit_resp.json()["tree"]["sha"]
 
-        index_file = os.path.join(tmpdir, "index.tmp")
-        os.environ["GIT_INDEX_FILE"] = index_file
+    # 2. Collect local file paths
+    current_files = []
+    for dirpath, _, filenames in os.walk("downloads"):
+        for fname in filenames:
+            if fname == ".gitkeep": continue
+            current_files.append(os.path.join(dirpath, fname))
+    for dirpath, _, filenames in os.walk("repos"):
+        for fname in filenames:
+            current_files.append(os.path.join(dirpath, fname))
+    for f in ["state.json", "INDEX.md"]:
+        if os.path.exists(f):
+            current_files.append(f)
 
-        # Gather all files on disk
-        current_files = []
-        for dirpath, _, filenames in os.walk("downloads"):
-            for fname in filenames:
-                if fname == ".gitkeep": continue
-                current_files.append(os.path.join(dirpath, fname))
-        for dirpath, _, filenames in os.walk("repos"):
-            for fname in filenames:
-                current_files.append(os.path.join(dirpath, fname))
-        for f in ["state.json", "INDEX.md"]:
-            if os.path.exists(f):
-                current_files.append(f)
+    if not current_files:
+        print("No files to add.")
+        return
 
-        if not current_files:
-            print("No files to add.")
-            return
+    # 3. Build new tree entries
+    tree_entries = []
+    for f in sorted(current_files):
+        posix_path = pathlib.Path(f).as_posix()
+        # Compute local SHA-1 (to check if blob already exists)
+        sha_local = git_hash_object(f)
+        # Upload blob (idempotent – GitHub deduplicates)
+        sha_remote = upload_blob(f)
+        # The SHA-1 should match, but we use the local one (Git's hash) for tree entry
+        tree_entries.append({
+            "path": posix_path,
+            "mode": "100644",
+            "type": "blob",
+            "sha": sha_local
+        })
 
-        # Convert to POSIX relative paths
-        current_paths = set(pathlib.Path(f).as_posix() for f in current_files)
+    # 4. Create the new tree (replace old tree, omitting deleted files)
+    payload = {"base_tree": base_tree_sha, "tree": tree_entries}
+    tree_resp = requests.post(f"{API_BASE}/git/trees", headers=HEADERS, json=payload)
+    tree_resp.raise_for_status()
+    new_tree_sha = tree_resp.json()["sha"]
 
-        old_tree_out = run(["git", "ls-tree", "-r", "--name-only", "main"])
-        old_paths = set(old_tree_out.splitlines()) if old_tree_out.strip() else set()
-        to_delete = old_paths - current_paths
+    if new_tree_sha == base_tree_sha:
+        print("No changes detected. Skipping push.")
+        return
 
-        parent_commit = run(["git", "rev-parse", "main"])
+    # 5. Create commit
+    commit_payload = {
+        "message": "Sync downloads [skip ci]",
+        "tree": new_tree_sha,
+        "parents": [latest_commit_sha]
+    }
+    commit_resp = requests.post(f"{API_BASE}/git/commits", headers=HEADERS, json=commit_payload)
+    commit_resp.raise_for_status()
+    new_commit_sha = commit_resp.json()["sha"]
 
-        # Build the full new tree (we'll create commits incrementally)
-        # First, create the index with all changes
-        run(["git", "read-tree", parent_commit])
+    # 6. Update branch reference
+    update_resp = requests.patch(
+        f"{API_BASE}/git/refs/heads/main",
+        headers=HEADERS,
+        json={"sha": new_commit_sha, "force": False}
+    )
+    update_resp.raise_for_status()
 
-        for path in sorted(to_delete):
-            run(["git", "update-index", "--force-remove", path], check=False)
-
-        # Add all files, collecting their sizes
-        file_info = []
-        for fpath in sorted(current_paths):
-            sha = run(["git", "hash-object", "-w", fpath])
-            size = os.path.getsize(fpath)
-            file_info.append((fpath, sha, size))
-            run(["git", "update-index", "--add", "--cacheinfo", "100644", sha, fpath])
-
-        new_tree = run(["git", "write-tree"])
-        parent_tree = run(["git", "rev-parse", f"{parent_commit}^{{tree}}"])
-
-        if new_tree == parent_tree:
-            print("No changes detected. Skipping push.")
-            return
-
-        # If total size <= MAX_BATCH_BYTES, do a single commit
-        total_size = sum(s for _, _, s in file_info)
-        if total_size <= MAX_BATCH_BYTES:
-            new_commit = run(["git", "commit-tree", "-p", parent_commit,
-                              "-m", "Sync downloads [skip ci]", new_tree])
-            run(["git", "update-ref", "refs/heads/main", new_commit])
-            run(["git", "push", "origin", "main"])
-            print(f"Single commit {new_commit} ({len(file_info)} files, {total_size/(1024*1024):.1f} MB)")
-            return
-
-        # Otherwise, split into cumulative batches
-        remaining = sorted(file_info, key=lambda x: x[2])  # sort by size (optional)
-        batches = []
-        batch = []
-        batch_size = 0
-        for fpath, sha, size in remaining:
-            if batch_size + size > MAX_BATCH_BYTES and batch:
-                batches.append(batch)
-                batch = []
-                batch_size = 0
-            batch.append((fpath, sha, size))
-            batch_size += size
-        if batch:
-            batches.append(batch)
-
-        print(f"Total {len(file_info)} files, {total_size/(1024*1024):.1f} MB -> {len(batches)} batches")
-
-        # Create commits cumulatively
-        current_parent = parent_commit
-        for i, batch in enumerate(batches, 1):
-            # Start with parent's tree
-            run(["git", "read-tree", current_parent])
-
-            # Apply deletions only in first batch
-            if i == 1 and to_delete:
-                for path in sorted(to_delete):
-                    run(["git", "update-index", "--force-remove", path], check=False)
-
-            # Add batch files
-            for fpath, sha, size in batch:
-                run(["git", "update-index", "--add", "--cacheinfo", "100644", sha, fpath])
-
-            batch_tree = run(["git", "write-tree"])
-            batch_commit = run(["git", "commit-tree", "-p", current_parent,
-                                "-m", f"Sync downloads batch {i}/{len(batches)} [skip ci]", batch_tree])
-            run(["git", "update-ref", "refs/heads/main", batch_commit])
-            run(["git", "push", "origin", "main"])
-            print(f"Batch {i}/{len(batches)}: {batch_commit} ({len(batch)} files)")
-            current_parent = batch_commit
-
-        print("All batches pushed successfully.")
-
-    finally:
-        shutil.rmtree(tmpdir, ignore_errors=True)
+    print(f"Pushed commit {new_commit_sha}")
 
 if __name__ == "__main__":
     main()
