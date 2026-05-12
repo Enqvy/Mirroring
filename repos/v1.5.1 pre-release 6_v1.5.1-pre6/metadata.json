@@ -1,0 +1,37 @@
+{
+  "url": "https://github.com/ajavadinezhad/zyrln/releases/download/v1.5.1-pre6/zyrln-1.5.1-pre6.apk",
+  "method": "github_release",
+  "repo": "ajavadinezhad/zyrln",
+  "tag": "v1.5.1-pre6",
+  "assets": [
+    {
+      "name": "zyrln-1.5.1-pre6-darwin-amd64",
+      "size": 11544336
+    },
+    {
+      "name": "zyrln-1.5.1-pre6-darwin-arm64",
+      "size": 10936850
+    },
+    {
+      "name": "zyrln-1.5.1-pre6-linux-amd64",
+      "size": 11398566
+    },
+    {
+      "name": "zyrln-1.5.1-pre6-windows-amd64.exe",
+      "size": 11480064
+    },
+    {
+      "name": "zyrln-1.5.1-pre6.apk",
+      "size": 25507256
+    }
+  ],
+  "crc32": {
+    "zyrln-1.5.1-pre6-windows-amd64.zip": "6d3210cc",
+    "zyrln-1.5.1-pre6-linux-amd64": "dacad140",
+    "zyrln-1.5.1-pre6.zip": "7ea05a08"
+  },
+  "total_size": 42254292,
+  "release_date": "2026-05-12T18:10:06Z",
+  "use_lfs": false,
+  "downloaded": "2026-05-12T21:12:34.688848+00:00"
+}
