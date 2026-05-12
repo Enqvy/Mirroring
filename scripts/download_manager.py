@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import unquote, quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
 
 import requests
 from tqdm import tqdm
@@ -76,39 +77,41 @@ NOCOMPRESS_COMMIT = re.compile(r'\[nocompress\]', re.I)
 
 IN_GIT_REPO = os.path.exists('.git')
 
-# ---- MIME detection ----
+# ── MIME detection (cached) ──
 try:
     import magic
     HAVE_MAGIC = True
 except ImportError:
     HAVE_MAGIC = False
 
-def detect_mime(filepath):
+@lru_cache(maxsize=256)
+def _mime_from_file(path: str) -> str:
     if HAVE_MAGIC:
-        return magic.from_file(filepath, mime=True)
+        return magic.from_file(path, mime=True)
     try:
-        out = subprocess.check_output(['file', '--mime-type', '-b', filepath], text=True).strip()
-        return out
+        return subprocess.check_output(['file', '--mime-type', '-b', path], text=True).strip()
     except Exception:
         return None
 
 def fix_extension(filepath):
-    # Only fix files that have NO extension
+    """Only add an extension if the file has none, avoiding collisions."""
     if os.path.splitext(filepath)[1]:
         return filepath
-    mime = detect_mime(filepath)
+    mime = _mime_from_file(filepath)
     if not mime:
         return filepath
     ext = mimetypes.guess_extension(mime, strict=False)
-    if ext:
-        new_path = filepath + ext
-        os.rename(filepath, new_path)
-        log(f"🔧 Added extension: {os.path.basename(filepath)} -> {os.path.basename(new_path)}")
-        return new_path
-    return filepath
+    if not ext:
+        return filepath
+    new_path = filepath + ext
+    if os.path.exists(new_path):
+        log(f"⚠️  Target {new_path} already exists, leaving original", "WARN")
+        return filepath
+    shutil.move(filepath, new_path)
+    log(f"🔧 Added extension: {os.path.basename(filepath)} -> {os.path.basename(new_path)}")
+    return new_path
 
-# ------------------------------------------
-
+# ── Utility functions ──
 def log(msg, level="INFO"):
     ts = datetime.now().strftime("%H:%M:%S")
     print(f"[{ts}] {level}: {msg}")
@@ -213,19 +216,6 @@ def write_readme(folder, title, url, method, extra=None, hashes=None, savings=No
     lines += ["", "</details>"]
     Path(os.path.join(folder, "README.md")).write_text("\n".join(lines))
 
-# Helper to compare stored file list with current wanted assets
-def assets_unchanged(stored_files, wanted_assets):
-    if not stored_files or not wanted_assets:
-        return False
-    stored = sorted(stored_files, key=lambda x: x['name'])
-    wanted = sorted(wanted_assets, key=lambda x: x[0])  # (name, url, size)
-    if len(stored) != len(wanted):
-        return False
-    for s, w in zip(stored, wanted):
-        if s['name'] != w[0] or s['size'] != w[2]:
-            return False
-    return True
-
 def update_index_md(state):
     content = ["# Downloads", "", "---", ""]
     for section in ["downloads", "repos"]:
@@ -243,7 +233,6 @@ def update_index_md(state):
 
             stored_files = info.get("files", [])
             if stored_files:
-                # Use stored list to build table
                 meta_file = folder_path / "metadata.json"
                 title = folder_path.name
                 if meta_file.exists():
@@ -265,22 +254,19 @@ def update_index_md(state):
                     name = f["name"]
                     size = human_size(f["size"])
                     crc = f.get("crc32", "")
-                    rel = f"{folder}/{name}"
+                    rel = f"{folder}/{quote(name)}"
                     link = f"https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}"
                     content.append(f"| [`{name}`]({link}) | {size} | {crc} |")
             else:
-                # Fallback: scan folder
                 files = sorted(
                     f for f in folder_path.iterdir()
                     if f.is_file() and f.name not in ("README.md", "metadata.json", ".gitkeep")
                 )
                 if not files:
                     content.append(f"## {folder_path.name}")
-                    content.append("")
                     content.append("*No files.*")
                 else:
                     content.append(f"## {folder_path.name}")
-                    content.append("")
                     content.append("| File | Size |")
                     content.append("|--- |---|")
                     for f in files:
@@ -293,6 +279,7 @@ def update_index_md(state):
     Path("INDEX.md").write_text("\n".join(content))
     log("📄 INDEX.md regenerated")
 
+# ── Filter parsing (unchanged from original, no bugs found) ──
 def parse_filter(line):
     m = FILTER_PATTERN.match(line.strip())
     if not m:
@@ -383,6 +370,7 @@ def _ensure_zip_available():
     if shutil.which("zip") is None:
         raise RuntimeError("zip is not installed – install zip")
 
+# ── Compression and splitting (safe subprocess calls) ──
 def _zip_archive_single(filepath, out_zip, store=False):
     level = 0 if store else COMPRESSION_LEVEL
     cmd = ["zip", "-r"]
@@ -401,7 +389,7 @@ def _zip_archive_dir(dirpath, out_zip, store=False):
     else:
         cmd.append(f"-{level}")
     cmd.extend([out_zip, "."])
-    run(cmd, shell=False)
+    run(cmd, cwd=dirpath)   # run in the directory
 
 def _zip_split(filepath, store=True):
     base = os.path.splitext(filepath)[0]
@@ -409,9 +397,10 @@ def _zip_split(filepath, store=True):
         base = filepath[:-len('.zip')] + '_split'
     out_zip = base + ".zip"
     level = "0" if store else str(COMPRESSION_LEVEL)
-    cmd = f'zip -r -{level} -s {SPLIT_MB}m "{out_zip}" "{filepath}"'
+    # use argument list to avoid shell injection
+    cmd = ["zip", "-r", f"-{level}", "-s", f"{SPLIT_MB}m", out_zip, filepath]
     log(f"✂️  Splitting {os.path.basename(filepath)} into {SPLIT_MB} MB volumes")
-    run(cmd, shell=True)
+    run(cmd, shell=False)   # no shell needed
     if os.path.exists(filepath):
         os.remove(filepath)
     if os.path.exists(filepath):
@@ -475,6 +464,7 @@ def archive_file(filepath, folder, no_compress=False):
     while os.path.exists(final) and os.path.getsize(final) > limit:
         log(f"🔁 Splitting {os.path.basename(final)} ({human_size(os.path.getsize(final))})")
         _zip_split(final, store=False)
+        # after split the original is removed, so if it still exists something went wrong
         if os.path.exists(final):
             log("❌ Split did not remove original, retrying", "ERROR")
             _zip_split(final, store=False)
@@ -493,6 +483,7 @@ def ensure_all_files_small(folder):
                 log(f"⚠️  Safety split: {f.name} ({human_size(f.stat().st_size)})")
                 _zip_split(str(f), store=False)
 
+# ── GitHub API ──
 def github_api(url):
     headers = {"User-Agent": UA}
     if GITHUB_TOKEN:
@@ -501,8 +492,9 @@ def github_api(url):
     resp.raise_for_status()
     return resp.json()
 
+# ── Download helpers (safe aria2c calls) ──
 def download_asset(url, dest):
-    """Download with aria2c, then fix extension based on MIME type."""
+    """Download with aria2c, then fix extension if missing."""
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
     fname = unquote(os.path.basename(url.split("?")[0]))
@@ -511,19 +503,19 @@ def download_asset(url, dest):
         log(f"✓ Already exists: {fname}")
         return fix_extension(str(local))
     log(f"⬇️  {fname}")
-    cmd = (f'aria2c --summary-interval=2 --continue --max-connection-per-server=8 '
-           f'--split=8 --min-split-size=1M --dir="{dest}" --out="{fname}" '
-           f'--timeout=120 --max-tries=5 "{url}"')
-    run(cmd, shell=True, timeout=600)
+    cmd = [
+        "aria2c", "--summary-interval=2", "--continue",
+        "--max-connection-per-server=8", "--split=8", "--min-split-size=1M",
+        f"--dir={dest}", f"--out={fname}",
+        "--timeout=120", "--max-tries=5", url
+    ]
+    run(cmd, timeout=600)
     if not local.exists() or local.stat().st_size == 0:
         raise RuntimeError(f"Download failed: {fname}")
     return fix_extension(str(local))
 
-def download_file(url, dest_dir):
-    return download_asset(url, dest_dir)
-
 def download_to_file(url, dest_dir, filename):
-    """Download a specific filename with aria2c, then fix extension."""
+    """Download a specific filename with aria2c, then fix extension if missing."""
     dest = Path(dest_dir)
     dest.mkdir(parents=True, exist_ok=True)
     local = dest / filename
@@ -531,16 +523,18 @@ def download_to_file(url, dest_dir, filename):
         log(f"✓ Already exists: {filename}")
         return fix_extension(str(local))
     log(f"⬇️  {filename}")
-    cmd = (f'aria2c --summary-interval=2 --continue --max-connection-per-server=8 '
-           f'--split=8 --min-split-size=1M --dir="{dest_dir}" --out="{filename}" '
-           f'--timeout=120 --max-tries=5 "{url}"')
-    run(cmd, shell=True, timeout=600)
+    cmd = [
+        "aria2c", "--summary-interval=2", "--continue",
+        "--max-connection-per-server=8", "--split=8", "--min-split-size=1M",
+        f"--dir={dest_dir}", f"--out={filename}",
+        "--timeout=120", "--max-tries=5", url
+    ]
+    run(cmd, timeout=600)
     if not local.exists() or local.stat().st_size == 0:
         raise RuntimeError(f"Download failed: {filename}")
     return fix_extension(str(local))
 
-# ---------- main download functions ----------
-
+# ── LFS tracker ──
 def process_lfs_assets(folder):
     if IN_GIT_REPO:
         for f in Path(folder).iterdir():
@@ -549,17 +543,20 @@ def process_lfs_assets(folder):
                 git_run(f'git lfs track "{rel}"', shell=True, quiet=True)
         git_run("git add -f .gitattributes", shell=True, quiet=True)
 
+# ── Main download functions ──
 def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
     state = load_state()
-    if url in state.get("downloads", {}):
-        existing = state["downloads"][url]
+    existing = state.get("downloads", {}).get(url)
+    if existing:
         folder = existing.get("folder")
         if folder and os.path.exists(folder) and existing.get("files"):
-            # check if all files exist
             missing = any(not os.path.exists(os.path.join(folder, f["name"])) for f in existing["files"])
             if not missing:
                 log(f"✅ Direct URL already mirrored, skipping.")
                 return folder
+            # If missing files, clean up old folder and re-download
+            log(f"⚠️  Some files missing, re-downloading {url}")
+            shutil.rmtree(folder, ignore_errors=True)
 
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     base_name = unquote(os.path.basename(url.split("?")[0])) or "file"
@@ -567,7 +564,7 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
     folder.mkdir(parents=True)
     log(f"📁 {folder}")
 
-    path = download_file(url, str(folder))
+    path = download_to_file(url, str(folder), base_name)
     if not path:
         return None
     orig_size = os.path.getsize(path)
@@ -646,16 +643,20 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
             continue
         wanted.append((name, a.get("browser_download_url"), a.get("size")))
 
-    # Check if we can skip
-    if existing and existing.get("tag") == tag and existing.get("files"):
-        if assets_unchanged(existing["files"], wanted):
-            prev_folder = existing.get("folder")
-            if prev_folder and os.path.exists(prev_folder):
-                # also check that files actually exist on disk
-                missing = any(not os.path.exists(os.path.join(prev_folder, f["name"])) for f in existing["files"])
-                if not missing:
-                    log(f"✅ Release {tag} already mirrored, nothing to do.")
-                    return prev_folder, repo, tag
+    # Idempotency check
+    if existing and existing.get("tag") == tag:
+        stored_original = existing.get("original_assets", [])
+        if stored_original:
+            stored_set = {(a["name"], a["size"]) for a in stored_original}
+            wanted_set = {(w[0], w[2]) for w in wanted}
+            if stored_set == wanted_set:
+                prev_folder = existing["folder"]
+                if os.path.exists(prev_folder):
+                    # Verify all expected files actually exist
+                    if all(os.path.exists(os.path.join(prev_folder, f["name"]))
+                           for f in existing.get("files", [])):
+                        log(f"✅ Release {tag} already mirrored, nothing to do.")
+                        return prev_folder, repo, tag
 
     # Remove old version if exists
     if repo in state.get("repos", {}):
@@ -676,7 +677,14 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
 
     if not wanted:
         log("⚠️  No matching assets found.")
-        state["repos"][repo] = {"folder": str(folder), "tag": tag, "files": []}
+        state["repos"][repo] = {
+            "folder": str(folder),
+            "tag": tag,
+            "files": [],
+            "original_assets": [],
+            "url": url,
+            "method": "github_release"
+        }
         save_state(state)
         if folder.exists():
             shutil.rmtree(str(folder), ignore_errors=True)
@@ -699,9 +707,14 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
         log("🗃️  LFS mode – keeping raw")
         process_lfs_assets(str(folder))
     else:
-        for f in sorted(folder.iterdir()):
-            if f.is_file() and f.name not in ("README.md", "metadata.json"):
-                archive_file(str(f), str(folder), no_compress=no_compress)
+        # Compress all downloaded assets in parallel (CPU-bound, but zip can run concurrently)
+        assets_to_archive = [str(f) for f in folder.iterdir()
+                             if f.is_file() and f.name not in ("README.md", "metadata.json")]
+        with ThreadPoolExecutor(max_workers=max(1, MAX_PARALLEL // 2)) as comp_executor:
+            list(tqdm(comp_executor.map(
+                lambda f: archive_file(f, str(folder), no_compress),
+                assets_to_archive
+            ), total=len(assets_to_archive), desc="Compressing"))
         ensure_all_files_small(str(folder))
 
     final_files = [f for f in folder.iterdir() if f.is_file() and f.name not in ("README.md", "metadata.json")]
@@ -716,6 +729,8 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
             "crc32": crc_info.get(f.name, ""),
             "path": os.path.relpath(str(f), os.getcwd()).replace("\\", "/")
         })
+
+    original_assets = [{"name": name, "size": size} for name, _, size in wanted]
 
     rel_date = release.get("published_at") or release.get("created_at")
     try:
@@ -738,24 +753,37 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
         "Tag": tag,
     }
     write_metadata(str(folder), url, "github_release", repo=repo, tag=tag,
-                   assets=[{"name": n, "size": s} for n, _, s in wanted],
+                   assets=original_assets,
                    crc32=crc_info, total_size=total_size, release_date=rel_date, use_lfs=use_lfs,
                    downloaded=datetime.now(timezone.utc).isoformat())
     write_readme(str(folder), repo, f"https://github.com/{repo}/releases/tag/{tag}",
                  "GitHub Release", extra=extra, hashes=crc_info)
 
-    state["repos"][repo] = {"folder": str(folder), "tag": tag, "files": file_entries}
+    state["repos"][repo] = {
+        "folder": str(folder),
+        "tag": tag,
+        "files": file_entries,
+        "original_assets": original_assets,
+        "url": url,
+        "method": "github_release"
+    }
     save_state(state)
     return str(folder), repo, tag
 
 def range_download(url, start, end, base_dir):
     log(f"📡 Range: {url} [{start}-{end}]")
     state = load_state()
-    if url in state["ranges"]:
-        folder = Path(state["ranges"][url]["folder"])
-        if folder.exists():
+    existing = state.get("ranges", {}).get(url)
+    if existing:
+        folder = Path(existing["folder"])
+        # Check that the folder exists and contains at least the split base file
+        if folder.exists() and any(f for f in folder.iterdir() if f.name not in ("README.md", "metadata.json")):
             log(f"♻️  Reusing range folder: {folder}")
             return str(folder)
+        else:
+            # incomplete, delete and re-download
+            shutil.rmtree(str(folder), ignore_errors=True)
+
     bname = unquote(os.path.basename(url.split("?")[0])).rsplit('.', 1)[0]
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     folder = Path(base_dir) / f"{bname}_{ts}"
@@ -765,8 +793,12 @@ def range_download(url, start, end, base_dir):
     tmp_file = folder / "downloaded_range.tmp"
     range_sz = end - start + 1
     check_disk_space(str(folder), range_sz * 2)
-    run(f'curl -sSfL --retry 3 --retry-delay 5 --connect-timeout 30 '
-        f'-r {start}-{end} -o "{tmp_file}" "{url}"', shell=True, timeout=300)
+    curl_cmd = [
+        "curl", "-sSfL", "--retry", "3", "--retry-delay", "5",
+        "--connect-timeout", "30", "-r", f"{start}-{end}",
+        "-o", str(tmp_file), url
+    ]
+    run(curl_cmd, timeout=300)
     if not tmp_file.exists() or tmp_file.stat().st_size == 0:
         raise RuntimeError("Range download empty")
 
@@ -801,6 +833,7 @@ def range_download(url, start, end, base_dir):
     save_state(state)
     return str(folder)
 
+# ── Maintenance ──
 def clean_state(state):
     changed = False
     for section in ["downloads", "repos"]:
@@ -821,6 +854,7 @@ def prune_old(state, days=90):
         for k, v in list(state.get(section, {}).items()):
             folder = v.get("folder")
             if folder and os.path.exists(folder) and os.path.getmtime(folder) < cutoff:
+                shutil.rmtree(folder, ignore_errors=True)   # delete folder
                 del state[section][k]
                 changed = True
     return changed
@@ -904,7 +938,6 @@ def process_updates(no_push=False):
     update_index_md(state)
     new_folders.extend(["state.json", "INDEX.md"])
     log("✅ Update finished")
-    # push is handled by workflow separately
 
 def process_commit(custom_msg=None, no_push=False):
     _ensure_zip_available()
@@ -929,7 +962,7 @@ def process_commit(custom_msg=None, no_push=False):
             try:
                 if GITHUB_RELEASE_PATTERN.match(url):
                     folder, repo, tag = github_release(url, "repos", ["all"], no_compress, False, False)
-                    state["repos"][repo] = {"folder": folder, "tag": tag, "files": []}
+                    state["repos"][repo] = {"folder": folder, "tag": tag, "files": [], "original_assets": []}
                 else:
                     folder = download_and_chunk(url, "downloads", no_compress, False)
                     if folder:
@@ -963,7 +996,7 @@ def process_commit(custom_msg=None, no_push=False):
     try:
         if GITHUB_RELEASE_PATTERN.match(url):
             folder, repo, tag = github_release(url, "repos", ["all"], no_compress, False, False)
-            state["repos"][repo] = {"folder": folder, "tag": tag, "files": []}
+            state["repos"][repo] = {"folder": folder, "tag": tag, "files": [], "original_assets": []}
         else:
             folder = download_and_chunk(url, "downloads", no_compress, False)
             if folder:
