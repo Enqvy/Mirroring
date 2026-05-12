@@ -14,13 +14,13 @@
     }
   ],
   "crc32": {
-    "v2rayN-windows-64_split.z01": "6db247be",
-    "v2rayN-linux-64_split.zip": "5f266a3f",
-    "v2rayN-linux-64_split.z01": "5d70f521",
-    "v2rayN-windows-64_split.zip": "12d59fe8"
+    "v2rayN-windows-64_split.z01": "66aef3ba",
+    "v2rayN-linux-64_split.zip": "e9f6f88d",
+    "v2rayN-linux-64_split.z01": "6f073959",
+    "v2rayN-windows-64_split.zip": "329cb9b9"
   },
   "total_size": 283374856,
   "release_date": "2026-05-10T10:00:06Z",
   "use_lfs": false,
-  "downloaded": "2026-05-12T15:10:14.437094+00:00"
+  "downloaded": "2026-05-12T15:14:52.050608+00:00"
 }
