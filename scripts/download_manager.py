@@ -297,37 +297,23 @@ def parse_filter(line):
     if not real:
         return repo, None, no_compress, pre_release, use_lfs
 
+    # We no longer blindly add a dot – patterns are regular expressions.
+    # The literal 'all' is still special.
     if 'all' in [r.lower() for r in real]:
         processed = ["all"]
         for r in real:
             if r.lower() == 'all':
                 continue
             if r.startswith('!'):
-                pattern = r[1:]
-                if '*' in pattern or '?' in pattern:
-                    processed.append(f"!{pattern}")
-                else:
-                    processed.append(f"!{'.' + pattern.lstrip('.')}")
+                processed.append(f"!{r[1:]}" if not r[1:].startswith('!') else r)
             else:
-                if '*' in r or '?' in r:
-                    processed.append(r)
-                else:
-                    processed.append('.' + r.lstrip('.'))
+                processed.append(r)
         return repo, processed, no_compress, pre_release, use_lfs
 
+    # Otherwise, just keep the raw patterns (already valid regex)
     processed = []
     for r in real:
-        if r.startswith('!'):
-            pattern = r[1:]
-            if '*' in pattern or '?' in pattern:
-                processed.append(f"!{pattern}")
-            else:
-                processed.append(f"!{'.' + pattern.lstrip('.')}")
-        else:
-            if '*' in r or '?' in r:
-                processed.append(r)
-            else:
-                processed.append('.' + r.lstrip('.'))
+        processed.append(r)          # no transformation at all
     return repo, processed, no_compress, pre_release, use_lfs
 
 def asset_matches(name, filters):
