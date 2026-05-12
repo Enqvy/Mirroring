@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 0,6,12,18 * * *'
+    - cron: '0 0,12 * * *'
 
 concurrency: download-${{ github.ref }}
 
@@ -32,7 +32,11 @@ jobs:
           MSG=$(curl -sSfL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/commits?per_page=1" \
             | jq -r '.[0].commit.message')
-          echo "ORIGINAL_COMMIT_MESSAGE=$MSG" >> $GITHUB_ENV
+          {
+            echo "ORIGINAL_COMMIT_MESSAGE<<EOF"
+            echo "$MSG"
+            echo "EOF"
+          } >> $GITHUB_ENV
 
       - name: Cache pip packages
         uses: actions/cache@v4
@@ -45,8 +49,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq aria2 zip unzip jq
-          pip install --quiet requests psutil tqdm
+          sudo apt-get install -y -qq aria2 zip unzip jq libmagic1
+          pip install --quiet requests psutil tqdm python-magic 2>/dev/null || true
 
       - name: Update repos from repo.txt
         if: github.event_name == 'push' || github.event_name == 'schedule'
@@ -60,15 +64,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push changes via bare clone + plumbing
+      - name: Push changes via bare clone + plumbing (size-based batches)
         if: always()
         run: |
           cat > push_via_git.py <<'PYEOF'
+          #!/usr/bin/env python3
           import os, sys, subprocess, shutil, tempfile, pathlib
 
           TOKEN = os.environ["GITHUB_TOKEN"]
           REPO = os.environ["GITHUB_REPOSITORY"]
           REPO_URL = f"https://x-access-token:{TOKEN}@github.com/{REPO}.git"
+
+          MAX_BATCH_BYTES = 500 * 1024 * 1024   # 500 MB per commit
 
           def run(cmd, check=True, **kwargs):
               proc = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
@@ -85,7 +92,6 @@ jobs:
                   run(["git", "clone", "--bare", "--depth=1", "--filter=blob:none", REPO_URL, clone_dir])
                   os.environ["GIT_DIR"] = clone_dir
 
-                  # Required for commit-tree
                   os.environ["GIT_AUTHOR_NAME"] = "github-actions[bot]"
                   os.environ["GIT_AUTHOR_EMAIL"] = "github-actions[bot]@users.noreply.github.com"
                   os.environ["GIT_COMMITTER_NAME"] = "github-actions[bot]"
@@ -94,46 +100,91 @@ jobs:
                   index_file = os.path.join(tmpdir, "index.tmp")
                   os.environ["GIT_INDEX_FILE"] = index_file
 
-                  run(["git", "read-tree", "main"])
-
-                  for path in ["downloads", "repos", "state.json", "INDEX.md"]:
-                      run(["git", "rm", "--cached", "-r", "--quiet", "--", path], check=False)
-
-                  files_to_add = []
+                  # Gather all files on disk
+                  current_files = []
                   for dirpath, _, filenames in os.walk("downloads"):
                       for fname in filenames:
-                          if fname == ".gitkeep":
-                              continue
-                          files_to_add.append(os.path.join(dirpath, fname))
+                          if fname == ".gitkeep": continue
+                          current_files.append(os.path.join(dirpath, fname))
                   for dirpath, _, filenames in os.walk("repos"):
                       for fname in filenames:
-                          files_to_add.append(os.path.join(dirpath, fname))
-                  files_to_add.append("state.json")
-                  files_to_add.append("INDEX.md")
+                          current_files.append(os.path.join(dirpath, fname))
+                  for f in ["state.json", "INDEX.md"]:
+                      if os.path.exists(f):
+                          current_files.append(f)
 
-                  added = False
-                  for fpath in files_to_add:
-                      if not os.path.exists(fpath):
-                          continue
-                      sha = run(["git", "hash-object", "-w", fpath])
-                      rel_path = pathlib.Path(fpath).as_posix()
-                      run(["git", "update-index", "--add", "--cacheinfo", "100644", sha, rel_path])
-                      added = True
-
-                  if not added:
+                  if not current_files:
                       print("No files to add.")
                       return
 
-                  new_tree = run(["git", "write-tree"])
-                  print(f"New tree: {new_tree}")
+                  current_paths = set(pathlib.Path(f).as_posix() for f in current_files)
+                  old_tree_out = run(["git", "ls-tree", "-r", "--name-only", "main"])
+                  old_paths = set(old_tree_out.splitlines()) if old_tree_out.strip() else set()
+                  to_delete = old_paths - current_paths
 
                   parent_commit = run(["git", "rev-parse", "main"])
-                  new_commit = run(["git", "commit-tree", "-p", parent_commit, "-m", "Sync downloads [skip ci]", new_tree])
-                  print(f"New commit: {new_commit}")
 
-                  run(["git", "update-ref", "refs/heads/main", new_commit])
-                  run(["git", "push", "origin", "main"])
-                  print("Push successful.")
+                  run(["git", "read-tree", parent_commit])
+
+                  for path in sorted(to_delete):
+                      run(["git", "update-index", "--force-remove", path], check=False)
+
+                  file_info = []
+                  for fpath in sorted(current_paths):
+                      sha = run(["git", "hash-object", "-w", fpath])
+                      size = os.path.getsize(fpath)
+                      file_info.append((fpath, sha, size))
+                      run(["git", "update-index", "--add", "--cacheinfo", "100644", sha, fpath])
+
+                  new_tree = run(["git", "write-tree"])
+                  parent_tree = run(["git", "rev-parse", f"{parent_commit}^{{tree}}"])
+
+                  if new_tree == parent_tree:
+                      print("No changes detected. Skipping push.")
+                      return
+
+                  total_size = sum(s for _, _, s in file_info)
+                  if total_size <= MAX_BATCH_BYTES:
+                      new_commit = run(["git", "commit-tree", "-p", parent_commit,
+                                        "-m", "Sync downloads [skip ci]", new_tree])
+                      run(["git", "update-ref", "refs/heads/main", new_commit])
+                      run(["git", "push", "origin", "main"])
+                      print(f"Single commit {new_commit} ({len(file_info)} files, {total_size/(1024*1024):.1f} MB)")
+                      return
+
+                  remaining = sorted(file_info, key=lambda x: x[2])
+                  batches = []
+                  batch = []
+                  batch_size = 0
+                  for fpath, sha, size in remaining:
+                      if batch_size + size > MAX_BATCH_BYTES and batch:
+                          batches.append(batch)
+                          batch = []
+                          batch_size = 0
+                      batch.append((fpath, sha, size))
+                      batch_size += size
+                  if batch:
+                      batches.append(batch)
+
+                  print(f"Total {len(file_info)} files, {total_size/(1024*1024):.1f} MB -> {len(batches)} batches")
+
+                  current_parent = parent_commit
+                  for i, batch in enumerate(batches, 1):
+                      run(["git", "read-tree", current_parent])
+                      if i == 1 and to_delete:
+                          for path in sorted(to_delete):
+                              run(["git", "update-index", "--force-remove", path], check=False)
+                      for fpath, sha, size in batch:
+                          run(["git", "update-index", "--add", "--cacheinfo", "100644", sha, fpath])
+                      batch_tree = run(["git", "write-tree"])
+                      batch_commit = run(["git", "commit-tree", "-p", current_parent,
+                                          "-m", f"Sync downloads batch {i}/{len(batches)} [skip ci]", batch_tree])
+                      run(["git", "update-ref", "refs/heads/main", batch_commit])
+                      run(["git", "push", "origin", "main"])
+                      print(f"Batch {i}/{len(batches)}: {batch_commit} ({len(batch)} files)")
+                      current_parent = batch_commit
+
+                  print("All batches pushed successfully.")
 
               finally:
                   shutil.rmtree(tmpdir, ignore_errors=True)
