@@ -1,0 +1,25 @@
+name: Rebuild state.json from existing files
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rebuild-state:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Full clone of repository
+        run: |
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git .
+      - name: Install Python dependencies
+        run: pip install --quiet requests
+      - name: Rebuild state.json
+        run: python3 scripts/rebuild_state.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git commit -m "Rebuild state.json with per-file checksums" || true
+          git push
