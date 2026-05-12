@@ -5,22 +5,16 @@
   "tag": "7.21.3",
   "assets": [
     {
-      "name": "v2rayN-linux-64.zip",
-      "size": 125382603
-    },
-    {
       "name": "v2rayN-windows-64.zip",
       "size": 157991785
     }
   ],
   "crc32": {
-    "v2rayN-windows-64_split.z01": "b852669b",
-    "v2rayN-linux-64_split.zip": "e8d40331",
-    "v2rayN-linux-64_split.z01": "1dbfefa6",
-    "v2rayN-windows-64_split.zip": "fe023064"
+    "v2rayN-windows-64_split.z01": "8a21b695",
+    "v2rayN-windows-64_split.zip": "7262151d"
   },
-  "total_size": 283374856,
+  "total_size": 157992021,
   "release_date": "2026-05-10T10:00:06Z",
   "use_lfs": false,
-  "downloaded": "2026-05-12T15:53:28.926427+00:00"
+  "downloaded": "2026-05-12T22:14:26.874119+00:00"
 }

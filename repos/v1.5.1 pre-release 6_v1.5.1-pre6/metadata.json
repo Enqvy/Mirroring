@@ -26,12 +26,12 @@
     }
   ],
   "crc32": {
-    "zyrln-1.5.1-pre6-windows-amd64.zip": "b7355e61",
+    "zyrln-1.5.1-pre6-windows-amd64.zip": "d319c6f6",
     "zyrln-1.5.1-pre6-linux-amd64": "dacad140",
-    "zyrln-1.5.1-pre6.zip": "2d36ec08"
+    "zyrln-1.5.1-pre6.zip": "6a357f29"
   },
   "total_size": 42254292,
   "release_date": "2026-05-12T18:10:06Z",
   "use_lfs": false,
-  "downloaded": "2026-05-12T22:07:55.309644+00:00"
+  "downloaded": "2026-05-12T22:14:17.034980+00:00"
 }
