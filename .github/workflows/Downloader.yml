@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 6 * * *'
 
 concurrency: download-${{ github.ref }}
 
@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Fetch scripts and state
         run: |
-          mkdir -p scripts downloads repos
+          mkdir -p scripts
           TOKEN="${{ secrets.GITHUB_TOKEN }}"
           REPO="${{ github.repository }}"
           BRANCH="main"
@@ -26,18 +26,15 @@ jobs:
               touch "$f"
           done
 
-      - name: Recreate missing mirrored folders (idempotency check)
-        run: |
-          python3 -c "
-          import json, os
-          with open('state.json') as f:
-              state = json.load(f)
-          for section in ('repos', 'downloads'):
-              for key, info in state.get(section, {}).items():
-                  folder = info.get('folder')
-                  if folder and not os.path.exists(folder):
-                      os.makedirs(folder, exist_ok=True)
-          "
+      - name: Restore cached downloads & repos
+        uses: actions/cache@v4
+        with:
+          path: |
+            downloads
+            repos
+          key: mirror-files-${{ hashFiles('repo.txt', 'state.json') }}
+          restore-keys: |
+            mirror-files-
 
       - name: Get last commit message (push events)
         if: github.event_name == 'push'
