@@ -5,20 +5,15 @@
   "tag": "2.1.7",
   "assets": [
     {
-      "name": "v2rayNG_2.1.7-fdroid_universal.apk",
-      "size": 64890663
-    },
-    {
       "name": "v2rayNG_2.1.7_universal.apk",
       "size": 64890179
     }
   ],
   "crc32": {
-    "v2rayNG_2.1.7-fdroid_universal.zip": "37c0cd14",
-    "v2rayNG_2.1.7_universal.zip": "4a570804"
+    "v2rayNG_2.1.7_universal.zip": "01e92b23"
   },
-  "total_size": 125425928,
+  "total_size": 62712860,
   "release_date": "2026-05-10T06:23:46Z",
   "use_lfs": false,
-  "downloaded": "2026-05-12T15:53:31.942617+00:00"
+  "downloaded": "2026-05-12T21:15:16.675311+00:00"
 }
