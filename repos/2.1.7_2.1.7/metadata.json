@@ -14,10 +14,11 @@
     }
   ],
   "crc32": {
-    "v2rayNG_2.1.7-fdroid_universal.zip": "93704f1b",
-    "v2rayNG_2.1.7_universal.zip": "36e75d92"
+    "v2rayNG_2.1.7-fdroid_universal.zip": "529de89a",
+    "v2rayNG_2.1.7_universal.zip": "5f34552f"
   },
   "total_size": 125425928,
   "release_date": "2026-05-10T06:23:46Z",
-  "use_lfs": false
+  "use_lfs": false,
+  "downloaded": "2026-05-12T13:40:59.757824+00:00"
 }
