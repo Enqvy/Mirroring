@@ -51,7 +51,7 @@ All settings can be adjusted in **`config.toml`** (compression level, split size
 4. Create a `repo.txt` (see syntax below).  
 5. (Optional) Create a `config.toml` next to the script for custom settings.  
 
-The workflow runs every **12 hours** and on every push to `main`.
+The workflow runs every **24 hours** and on every push to `main`.
 
 ---
 
