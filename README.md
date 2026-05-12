@@ -142,13 +142,13 @@ Or use a tool like `7z`:
 
 ---
 
-## Incremental updates
+## Incremental updates & idempotency
 
 - **GitHub releases** – the script remembers the tag of the last mirrored release.  
-  If the tag hasn’t changed, the whole release is **skipped**.  
+  If the tag hasn’t changed, the entire release is **skipped completely** – no files are downloaded, overwritten, or pushed.  
 - **Direct downloads** – once a direct URL has been downloaded, it’s recorded in `state.json`. The same URL will never be downloaded again.
 
-This keeps your repository small and the runs fast.
+This keeps your repository small and the runs fast. No redundant commits are created, and the push step automatically avoids empty pushes.
 
 ---
 
@@ -160,14 +160,15 @@ The following extensions are **always ignored**, even with `[all]`:
 
 ---
 
-## Extension‑less files
+## Extension fixing (MIME detection)
 
-If a downloaded file has no extension (e.g. an executable named `zyrln-linux-amd64`), the script uses `file --mime-type` and Python’s `mimetypes` module to guess the correct extension and renames the file.
+If a downloaded file has a missing or wrong extension (e.g. an executable named `zyrln-linux-amd64` or an image served without an extension), the script detects the real file type using `file --mime-type` (or the `magic` library if available) and automatically renames the file to the correct extension. This happens **before** compression, so the final `.zip` always contains a properly named file.
 
-- `video/mp4` → `*.mp4`  
 - `application/x-dosexec` → `*.exe`  
+- `image/png` → `*.png`  
+- `audio/flac` → `*.flac`
 
-If the type cannot be determined, the file is **kept as‑is** (no renaming, no deletion).
+If the type cannot be determined, the file is kept as‑is.
 
 ---
 
@@ -181,13 +182,19 @@ Inside each folder’s `README.md` (and therefore in `INDEX.md`), you’ll see:
 
 ---
 
+## Push batching
+
+When new files are added, the workflow pushes them in commits of up to **500 MB** each. If the total size exceeds that, the files are split across multiple cumulative commits (each building on the previous one) to ensure a smooth push without hitting Git size limits.
+
+---
+
 ## Configuration (`config.toml`)
 
 Place a file named `config.toml` next to `download_manager.py` to override defaults:
 
 ```toml
 split_mb = 99                # file‑size threshold for splitting (MiB)
-push_batch_bytes = 367001600  # max bytes per git push (350 MiB)
+push_batch_bytes = 500000000  # max bytes per git commit (500 MiB)
 max_parallel = 4              # simultaneous downloads
 compression_level = 9         # 0 = store, 1 = fastest, 9 = best
 compression_method = "Deflate" # kept for compatibility, ignored
