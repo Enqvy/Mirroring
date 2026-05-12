@@ -19,7 +19,7 @@ except ImportError:
 
 _DEFAULTS = {
     "split_mb": 99,
-    "push_batch_bytes": 500 * 1024 * 1024,   # 500 MB per commit
+    "push_batch_bytes": 500 * 1024 * 1024,
     "max_parallel": 4,
     "compression_level": 9,
     "extract_archive_exts": [".zip", ".jar", ".war", ".ear"],
@@ -76,7 +76,7 @@ NOCOMPRESS_COMMIT = re.compile(r'\[nocompress\]', re.I)
 
 IN_GIT_REPO = os.path.exists('.git')
 
-# ---- MIME detection & extension fixing ----
+# ---- MIME detection ----
 try:
     import magic
     HAVE_MAGIC = True
@@ -104,6 +104,7 @@ def fix_extension(filepath):
             os.rename(filepath, new_path)
             return new_path
     return filepath
+
 # ------------------------------------------
 
 def log(msg, level="INFO"):
@@ -210,17 +211,82 @@ def write_readme(folder, title, url, method, extra=None, hashes=None, savings=No
     lines += ["", "</details>"]
     Path(os.path.join(folder, "README.md")).write_text("\n".join(lines))
 
+# Helper to compare stored file list with current wanted assets
+def assets_unchanged(stored_files, wanted_assets):
+    if not stored_files or not wanted_assets:
+        return False
+    stored = sorted(stored_files, key=lambda x: x['name'])
+    wanted = sorted(wanted_assets, key=lambda x: x[0])  # (name, url, size)
+    if len(stored) != len(wanted):
+        return False
+    for s, w in zip(stored, wanted):
+        if s['name'] != w[0] or s['size'] != w[2]:
+            return False
+    return True
+
 def update_index_md(state):
     content = ["# Downloads", "", "---", ""]
     for section in ["downloads", "repos"]:
         for key, info in state.get(section, {}).items():
             folder = info.get("folder")
-            if not folder: continue
-            rm = Path(folder) / "README.md"
-            if rm.exists():
-                content.extend(rm.read_text().splitlines())
+            if not folder:
+                continue
+            folder_path = Path(folder)
+            if not folder_path.exists():
+                content.append(f"## {folder_path.name}")
+                content.append("")
+                content.append("*This folder no longer exists.*")
+                content += ["", "---", ""]
+                continue
+
+            stored_files = info.get("files", [])
+            if stored_files:
+                # Use stored list to build table
+                meta_file = folder_path / "metadata.json"
+                title = folder_path.name
+                if meta_file.exists():
+                    try:
+                        meta = json.loads(meta_file.read_text())
+                        artist = meta.get("artist", "")
+                        album = meta.get("album", "")
+                        if artist and album:
+                            title = f"{artist} - {album}"
+                        elif album:
+                            title = album
+                    except:
+                        pass
+                content.append(f"## {title}")
+                content.append("")
+                content.append("| File | Size | CRC32 |")
+                content.append("|--- |--- |---|")
+                for f in stored_files:
+                    name = f["name"]
+                    size = human_size(f["size"])
+                    crc = f.get("crc32", "")
+                    rel = f"{folder}/{name}"
+                    link = f"https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}"
+                    content.append(f"| [`{name}`]({link}) | {size} | {crc} |")
             else:
-                content.append(f"## {Path(folder).name}")
+                # Fallback: scan folder
+                files = sorted(
+                    f for f in folder_path.iterdir()
+                    if f.is_file() and f.name not in ("README.md", "metadata.json", ".gitkeep")
+                )
+                if not files:
+                    content.append(f"## {folder_path.name}")
+                    content.append("")
+                    content.append("*No files.*")
+                else:
+                    content.append(f"## {folder_path.name}")
+                    content.append("")
+                    content.append("| File | Size |")
+                    content.append("|--- |---|")
+                    for f in files:
+                        rel = f"{folder}/{f.name}"
+                        sz = human_size(f.stat().st_size)
+                        name = unquote(f.name)
+                        link = f"https://github.com/{GITHUB_REPOSITORY}/raw/main/{url_encode(rel)}"
+                        content.append(f"| [`{name}`]({link}) | {sz} |")
             content += ["", "---", ""]
     Path("INDEX.md").write_text("\n".join(content))
     log("📄 INDEX.md regenerated")
@@ -473,13 +539,25 @@ def download_to_file(url, dest_dir, filename):
 
 # ---------- main download functions ----------
 
+def process_lfs_assets(folder):
+    if IN_GIT_REPO:
+        for f in Path(folder).iterdir():
+            if f.is_file() and f.name not in ("README.md", "metadata.json"):
+                rel = os.path.relpath(str(f), os.getcwd())
+                git_run(f'git lfs track "{rel}"', shell=True, quiet=True)
+        git_run("git add -f .gitattributes", shell=True, quiet=True)
+
 def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
     state = load_state()
     if url in state.get("downloads", {}):
-        folder = state["downloads"][url].get("folder")
-        if folder and os.path.exists(folder):
-            log(f"✅ Direct URL already mirrored, skipping.")
-            return folder
+        existing = state["downloads"][url]
+        folder = existing.get("folder")
+        if folder and os.path.exists(folder) and existing.get("files"):
+            # check if all files exist
+            missing = any(not os.path.exists(os.path.join(folder, f["name"])) for f in existing["files"])
+            if not missing:
+                log(f"✅ Direct URL already mirrored, skipping.")
+                return folder
 
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     base_name = unquote(os.path.basename(url.split("?")[0])) or "file"
@@ -501,6 +579,15 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
     final_files = [f for f in folder.iterdir() if f.is_file() and f.name not in ("README.md", "metadata.json")]
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
 
+    file_entries = []
+    for f in final_files:
+        file_entries.append({
+            "name": f.name,
+            "size": os.path.getsize(str(f)),
+            "crc32": crc_info.get(f.name, ""),
+            "path": os.path.relpath(str(f), os.getcwd()).replace("\\", "/")
+        })
+
     total_compressed = sum(os.path.getsize(str(f)) for f in final_files)
     savings = {}
     if orig_size > 0 and total_compressed > 0:
@@ -516,7 +603,7 @@ def download_and_chunk(url, dest_base, no_compress=False, use_lfs=False):
     if use_lfs:
         process_lfs_assets(str(folder))
 
-    state["downloads"][url] = {"folder": str(folder)}
+    state["downloads"][url] = {"folder": str(folder), "files": file_entries}
     save_state(state)
     return str(folder)
 
@@ -541,15 +628,34 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
         tag = release.get("tag_name")
 
     state = load_state()
+    existing = state.get("repos", {}).get(repo)
 
-    # Idempotency: if tag unchanged and folder still exists, skip everything
-    if repo in state.get("repos", {}) and state["repos"][repo].get("tag") == tag:
-        prev_folder = state["repos"][repo].get("folder")
-        if prev_folder and os.path.exists(prev_folder):
-            log(f"✅ Release {tag} already mirrored, nothing to do.")
-            return prev_folder, repo, tag
+    # Build wanted list from release assets
+    all_assets = release.get("assets", [])
+    wanted = []
+    for a in all_assets:
+        name = a.get("name")
+        if not name:
+            continue
+        if filters and filters != ["all"] and not asset_matches(name, filters):
+            continue
+        if is_skip_asset(name):
+            log(f"  ⏭️  Skipping {name}")
+            continue
+        wanted.append((name, a.get("browser_download_url"), a.get("size")))
 
-    # Remove old release folder if exists
+    # Check if we can skip
+    if existing and existing.get("tag") == tag and existing.get("files"):
+        if assets_unchanged(existing["files"], wanted):
+            prev_folder = existing.get("folder")
+            if prev_folder and os.path.exists(prev_folder):
+                # also check that files actually exist on disk
+                missing = any(not os.path.exists(os.path.join(prev_folder, f["name"])) for f in existing["files"])
+                if not missing:
+                    log(f"✅ Release {tag} already mirrored, nothing to do.")
+                    return prev_folder, repo, tag
+
+    # Remove old version if exists
     if repo in state.get("repos", {}):
         old_folder = state["repos"][repo].get("folder")
         if old_folder and os.path.exists(old_folder):
@@ -566,22 +672,9 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
     folder.mkdir(parents=True)
     log(f"📁 {folder}")
 
-    all_assets = release.get("assets", [])
-    wanted = []
-    for a in all_assets:
-        name = a.get("name")
-        if not name:
-            continue
-        if filters and filters != ["all"] and not asset_matches(name, filters):
-            continue
-        if is_skip_asset(name):
-            log(f"  ⏭️  Skipping {name}")
-            continue
-        wanted.append((name, a.get("browser_download_url"), a.get("size")))
-
     if not wanted:
         log("⚠️  No matching assets found.")
-        state["repos"][repo] = {"folder": str(folder), "tag": tag}
+        state["repos"][repo] = {"folder": str(folder), "tag": tag, "files": []}
         save_state(state)
         if folder.exists():
             shutil.rmtree(str(folder), ignore_errors=True)
@@ -613,6 +706,15 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
     crc_info = {f.name: crc32_file(str(f)) for f in final_files}
     total_size = sum(os.path.getsize(str(f)) for f in final_files)
 
+    file_entries = []
+    for f in final_files:
+        file_entries.append({
+            "name": f.name,
+            "size": os.path.getsize(str(f)),
+            "crc32": crc_info.get(f.name, ""),
+            "path": os.path.relpath(str(f), os.getcwd()).replace("\\", "/")
+        })
+
     rel_date = release.get("published_at") or release.get("created_at")
     try:
         dt = datetime.fromisoformat(rel_date.replace('Z', '+00:00'))
@@ -640,14 +742,13 @@ def github_release(url, dest_dir, filters=None, no_compress=False,
     write_readme(str(folder), repo, f"https://github.com/{repo}/releases/tag/{tag}",
                  "GitHub Release", extra=extra, hashes=crc_info)
 
-    state["repos"][repo] = {"folder": str(folder), "tag": tag}
+    state["repos"][repo] = {"folder": str(folder), "tag": tag, "files": file_entries}
     save_state(state)
     return str(folder), repo, tag
 
 def range_download(url, start, end, base_dir):
     log(f"📡 Range: {url} [{start}-{end}]")
     state = load_state()
-    folder = None
     if url in state["ranges"]:
         folder = Path(state["ranges"][url]["folder"])
         if folder.exists():
@@ -697,14 +798,6 @@ def range_download(url, start, end, base_dir):
     state["ranges"][url] = {"folder": str(folder), "last_range_end": end}
     save_state(state)
     return str(folder)
-
-def process_lfs_assets(folder):
-    if IN_GIT_REPO:
-        for f in Path(folder).iterdir():
-            if f.is_file() and f.name not in ("README.md", "metadata.json"):
-                rel = os.path.relpath(str(f), os.getcwd())
-                git_run(f'git lfs track "{rel}"', shell=True, quiet=True)
-        git_run("git add -f .gitattributes", shell=True, quiet=True)
 
 def clean_state(state):
     changed = False
@@ -808,10 +901,8 @@ def process_updates(no_push=False):
     state = load_state()
     update_index_md(state)
     new_folders.extend(["state.json", "INDEX.md"])
-    if not no_push and IN_GIT_REPO:
-        # Actual push is handled by the workflow's push_via_git.py step
-        pass
     log("✅ Update finished")
+    # push is handled by workflow separately
 
 def process_commit(custom_msg=None, no_push=False):
     _ensure_zip_available()
@@ -829,7 +920,6 @@ def process_commit(custom_msg=None, no_push=False):
     new_folders = []
 
     urls = URL_PATTERN.findall(msg)
-
     if len(urls) > 1:
         log(f"📦 {len(urls)} URLs")
         for url in urls:
@@ -837,11 +927,11 @@ def process_commit(custom_msg=None, no_push=False):
             try:
                 if GITHUB_RELEASE_PATTERN.match(url):
                     folder, repo, tag = github_release(url, "repos", ["all"], no_compress, False, False)
-                    state["repos"][repo] = {"folder": folder, "tag": tag}
+                    state["repos"][repo] = {"folder": folder, "tag": tag, "files": []}
                 else:
                     folder = download_and_chunk(url, "downloads", no_compress, False)
                     if folder:
-                        state["downloads"][url] = {"folder": folder}
+                        state["downloads"][url] = {"folder": folder, "files": []}
                 new_folders.append(folder)
             except Exception as e:
                 log(f"❌ {e}", "ERROR")
@@ -871,11 +961,11 @@ def process_commit(custom_msg=None, no_push=False):
     try:
         if GITHUB_RELEASE_PATTERN.match(url):
             folder, repo, tag = github_release(url, "repos", ["all"], no_compress, False, False)
-            state["repos"][repo] = {"folder": folder, "tag": tag}
+            state["repos"][repo] = {"folder": folder, "tag": tag, "files": []}
         else:
             folder = download_and_chunk(url, "downloads", no_compress, False)
             if folder:
-                state["downloads"][url] = {"folder": folder}
+                state["downloads"][url] = {"folder": folder, "files": []}
         new_folders.append(folder)
         if folder:
             save_state(state)
