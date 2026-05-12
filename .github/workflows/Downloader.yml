@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Fetch required files (no clone)
+      - name: Fetch scripts and state
         run: |
           mkdir -p scripts downloads repos
           TOKEN="${{ secrets.GITHUB_TOKEN }}"
@@ -25,6 +25,19 @@ jobs:
               "https://raw.githubusercontent.com/$REPO/$BRANCH/$f" -o "$f" 2>/dev/null || \
               touch "$f"
           done
+
+      - name: Recreate missing mirrored folders (idempotency check)
+        run: |
+          python3 -c "
+          import json, os
+          with open('state.json') as f:
+              state = json.load(f)
+          for section in ('repos', 'downloads'):
+              for key, info in state.get(section, {}).items():
+                  folder = info.get('folder')
+                  if folder and not os.path.exists(folder):
+                      os.makedirs(folder, exist_ok=True)
+          "
 
       - name: Get last commit message (push events)
         if: github.event_name == 'push'
@@ -75,7 +88,7 @@ jobs:
           REPO = os.environ["GITHUB_REPOSITORY"]
           REPO_URL = f"https://x-access-token:{TOKEN}@github.com/{REPO}.git"
 
-          MAX_BATCH_BYTES = 500 * 1024 * 1024   # 500 MB per commit
+          MAX_BATCH_BYTES = 500 * 1024 * 1024
 
           def run(cmd, check=True, **kwargs):
               proc = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
@@ -100,7 +113,6 @@ jobs:
                   index_file = os.path.join(tmpdir, "index.tmp")
                   os.environ["GIT_INDEX_FILE"] = index_file
 
-                  # Gather all files on disk
                   current_files = []
                   for dirpath, _, filenames in os.walk("downloads"):
                       for fname in filenames:
@@ -123,7 +135,6 @@ jobs:
                   to_delete = old_paths - current_paths
 
                   parent_commit = run(["git", "rev-parse", "main"])
-
                   run(["git", "read-tree", parent_commit])
 
                   for path in sorted(to_delete):
