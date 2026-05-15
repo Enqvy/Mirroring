@@ -31,9 +31,9 @@
 
 | File | Size | CRC32 |
 |--- |--- |---|
-| [`zyrln-1.5.1-pre6-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%206_v1.5.1-pre6%2Fzyrln-1.5.1-pre6-windows-amd64.zip) | 6.1 MB | 80a8b14f |
+| [`zyrln-1.5.1-pre6-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%206_v1.5.1-pre6%2Fzyrln-1.5.1-pre6-windows-amd64.zip) | 6.1 MB | 4738d2d3 |
 | [`zyrln-1.5.1-pre6-linux-amd64`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%206_v1.5.1-pre6%2Fzyrln-1.5.1-pre6-linux-amd64) | 10.9 MB | dacad140 |
-| [`zyrln-1.5.1-pre6.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%206_v1.5.1-pre6%2Fzyrln-1.5.1-pre6.zip) | 23.3 MB | 1cfeb31b |
+| [`zyrln-1.5.1-pre6.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.5.1%20pre-release%206_v1.5.1-pre6%2Fzyrln-1.5.1-pre6.zip) | 23.3 MB | a0a534fa |
 
 ---
 
@@ -41,22 +41,22 @@
 
 | File | Size | CRC32 |
 |--- |--- |---|
-| [`mhrv-rs-android-x86_64-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-x86_64-v1.9.25.zip) | 13.8 MB | 9e3f1639 |
-| [`mhrv-rs-android-armeabi-v7a-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-armeabi-v7a-v1.9.25.zip) | 13.1 MB | 9068d792 |
-| [`mhrv-rs-android-x86-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-x86-v1.9.25.zip) | 13.9 MB | be0ee12e |
-| [`mhrv-rs-linux-musl-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-musl-arm64.tar.zip) | 2.1 MB | 92a02afa |
+| [`mhrv-rs-android-x86_64-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-x86_64-v1.9.25.zip) | 13.8 MB | b58a599d |
+| [`mhrv-rs-android-armeabi-v7a-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-armeabi-v7a-v1.9.25.zip) | 13.1 MB | c9e69434 |
+| [`mhrv-rs-android-x86-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-x86-v1.9.25.zip) | 13.9 MB | fc539005 |
+| [`mhrv-rs-linux-musl-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-musl-arm64.tar.zip) | 2.1 MB | 6d975c97 |
 | [`mhrv-rs-windows-amd64.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-windows-amd64.zip) | 7.5 MB | db3f3fe3 |
-| [`mhrv-rs-linux-musl-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-musl-amd64.tar.zip) | 2.3 MB | c1716c50 |
-| [`mhrv-rs-macos-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-macos-amd64.tar.zip) | 7.1 MB | 13d8b528 |
+| [`mhrv-rs-linux-musl-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-musl-amd64.tar.zip) | 2.3 MB | 4844edfc |
+| [`mhrv-rs-macos-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-macos-amd64.tar.zip) | 7.1 MB | b6309515 |
 | [`mhrv-rs-macos-amd64-app.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-macos-amd64-app.zip) | 5.0 MB | f48f26bb |
-| [`mhrv-rs-android-universal-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-universal-v1.9.25.zip) | 23.8 MB | 3a5ea059 |
-| [`mhrv-rs-android-arm64-v8a-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-arm64-v8a-v1.9.25.zip) | 13.6 MB | 596f924f |
-| [`mhrv-rs-macos-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-macos-arm64.tar.zip) | 6.5 MB | 2dc539c4 |
-| [`mhrv-rs-linux-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-amd64.tar.zip) | 9.7 MB | 0e4e42d9 |
-| [`mhrv-rs-linux-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-arm64.tar.zip) | 2.1 MB | 077a5c4b |
-| [`mhrv-rs-openwrt-mipsel-softfloat.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-openwrt-mipsel-softfloat.tar.zip) | 2.2 MB | 16204f0c |
+| [`mhrv-rs-android-universal-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-universal-v1.9.25.zip) | 23.8 MB | 360ecc10 |
+| [`mhrv-rs-android-arm64-v8a-v1.9.25.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-android-arm64-v8a-v1.9.25.zip) | 13.6 MB | 467dac23 |
+| [`mhrv-rs-macos-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-macos-arm64.tar.zip) | 6.5 MB | 4eb78185 |
+| [`mhrv-rs-linux-amd64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-amd64.tar.zip) | 9.7 MB | 2c73e1cd |
+| [`mhrv-rs-linux-arm64.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-linux-arm64.tar.zip) | 2.1 MB | 9ac7eedd |
+| [`mhrv-rs-openwrt-mipsel-softfloat.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-openwrt-mipsel-softfloat.tar.zip) | 2.2 MB | d05bde8d |
 | [`mhrv-rs-macos-arm64-app.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-macos-arm64-app.zip) | 4.6 MB | 078761e7 |
-| [`mhrv-rs-raspbian-armhf.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-raspbian-armhf.tar.zip) | 2.0 MB | c9c912fd |
+| [`mhrv-rs-raspbian-armhf.tar.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2Fv1.9.25_v1.9.25%2Fmhrv-rs-raspbian-armhf.tar.zip) | 2.0 MB | ac002343 |
 
 ---
 
@@ -64,8 +64,8 @@
 
 | File | Size | CRC32 |
 |--- |--- |---|
-| [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.22.0_7.22.0%2Fv2rayN-windows-64_split.z01) | 99.0 MB | 302ba1b1 |
-| [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.22.0_7.22.0%2Fv2rayN-windows-64_split.zip) | 55.4 MB | 505088ba |
+| [`v2rayN-windows-64_split.z01`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.22.0_7.22.0%2Fv2rayN-windows-64_split.z01) | 99.0 MB | 5aac1aec |
+| [`v2rayN-windows-64_split.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F7.22.0_7.22.0%2Fv2rayN-windows-64_split.zip) | 55.4 MB | f6721aae |
 
 ---
 
@@ -73,6 +73,6 @@
 
 | File | Size | CRC32 |
 |--- |--- |---|
-| [`v2rayNG_2.1.7_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7_universal.zip) | 59.8 MB | 835ef607 |
+| [`v2rayNG_2.1.7_universal.zip`](https://github.com/Enqvy/Mirroring/raw/main/repos%2F2.1.7_2.1.7%2Fv2rayNG_2.1.7_universal.zip) | 59.8 MB | 2211a71f |
 
 ---
