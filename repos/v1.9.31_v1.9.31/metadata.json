@@ -1,0 +1,94 @@
+{
+  "url": "https://github.com/therealaleph/MasterHttpRelayVPN-RUST/releases/download/v1.9.31/mhrv-rs-windows-amd64.zip",
+  "method": "github_release",
+  "repo": "therealaleph/MasterHttpRelayVPN-RUST",
+  "tag": "v1.9.31",
+  "assets": [
+    {
+      "name": "mhrv-rs-android-arm64-v8a-v1.9.31.apk",
+      "size": 19588157
+    },
+    {
+      "name": "mhrv-rs-android-armeabi-v7a-v1.9.31.apk",
+      "size": 16978497
+    },
+    {
+      "name": "mhrv-rs-android-universal-v1.9.31.apk",
+      "size": 43418435
+    },
+    {
+      "name": "mhrv-rs-android-x86-v1.9.31.apk",
+      "size": 20386369
+    },
+    {
+      "name": "mhrv-rs-android-x86_64-v1.9.31.apk",
+      "size": 20627855
+    },
+    {
+      "name": "mhrv-rs-linux-amd64.tar.gz",
+      "size": 10190886
+    },
+    {
+      "name": "mhrv-rs-linux-arm64.tar.gz",
+      "size": 2206107
+    },
+    {
+      "name": "mhrv-rs-linux-musl-amd64.tar.gz",
+      "size": 2435566
+    },
+    {
+      "name": "mhrv-rs-linux-musl-arm64.tar.gz",
+      "size": 2249474
+    },
+    {
+      "name": "mhrv-rs-macos-amd64-app.zip",
+      "size": 5278066
+    },
+    {
+      "name": "mhrv-rs-macos-amd64.tar.gz",
+      "size": 7508544
+    },
+    {
+      "name": "mhrv-rs-macos-arm64-app.zip",
+      "size": 4865702
+    },
+    {
+      "name": "mhrv-rs-macos-arm64.tar.gz",
+      "size": 6893729
+    },
+    {
+      "name": "mhrv-rs-openwrt-mipsel-softfloat.tar.gz",
+      "size": 2369861
+    },
+    {
+      "name": "mhrv-rs-raspbian-armhf.tar.gz",
+      "size": 2129976
+    },
+    {
+      "name": "mhrv-rs-windows-amd64.zip",
+      "size": 7900576
+    }
+  ],
+  "crc32": {
+    "mhrv-rs-macos-arm64-app.zip": "295968d4",
+    "mhrv-rs-raspbian-armhf.tar.zip": "731572c2",
+    "mhrv-rs-openwrt-mipsel-softfloat.tar.zip": "d6a9f3b1",
+    "mhrv-rs-android-armeabi-v7a-v1.9.31.zip": "f6be0e2e",
+    "mhrv-rs-linux-musl-arm64.tar.zip": "fc0ab29d",
+    "mhrv-rs-macos-arm64.tar.zip": "22f2f9f9",
+    "mhrv-rs-windows-amd64.zip": "5e550038",
+    "mhrv-rs-macos-amd64.tar.zip": "1af521af",
+    "mhrv-rs-macos-amd64-app.zip": "a68dcf99",
+    "mhrv-rs-linux-musl-amd64.tar.zip": "35b2a88a",
+    "mhrv-rs-linux-amd64.tar.zip": "2a36d5ce",
+    "mhrv-rs-android-x86-v1.9.31.zip": "819293e9",
+    "mhrv-rs-android-universal-v1.9.31.zip": "dba1f9a9",
+    "mhrv-rs-android-x86_64-v1.9.31.zip": "295d1a07",
+    "mhrv-rs-linux-arm64.tar.zip": "d002359c",
+    "mhrv-rs-android-arm64-v8a-v1.9.31.zip": "cf29fcad"
+  },
+  "total_size": 136123271,
+  "release_date": "2026-05-19T18:01:14Z",
+  "use_lfs": false,
+  "downloaded": "2026-05-20T08:59:35.030610+00:00"
+}
