@@ -1,12 +1,1 @@
-# VPN apps
-ajavadinezhad/zyrln [all,pre]
-therealaleph/MasterHttpRelayVPN-RUST [all,pre]
 
-# v2rayN - Windows (64-bit)
-2dust/v2rayN [^v2rayN-windows-64\.zip$, pre]
-
-# v2rayNG - Android Universal
-2dust/v2rayNG [^v2rayNG_(?!.*-fdroid).*_universal\.apk$, pre]
-
-# Rules & configs (no compression - keep raw)
-Chocolate4U/Iran-v2ray-rules [all,nocompress,pre]
