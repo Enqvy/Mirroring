@@ -1,3 +1,5 @@
+# This repository was archived due to lack of need, if you ever need this repository, theres a good option: [Kurdeus/Meli-Action](https://github.com/Kurdeus/Meli-Action)
+
 # Download Manager
 
 Automated mirroring of GitHub releases and direct URLs.  
